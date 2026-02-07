@@ -1,0 +1,197 @@
+{
+  "project": "Onboarding Modular Proposal",
+  "branchName": "ralph/onboarding-checklist-widget",
+  "description": "Floating setup-guide widget (Stripe-style) anchored to the bottom-right corner of the dashboard. Shows 9-step onboarding progress, supports expand/collapse, persists state via mock API, and deep-links to existing onboarding forms.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Define the 9-step onboarding data model",
+      "description": "As a developer, I need a shared step configuration with all 9 activation steps so that the widget and context have a single source of truth.",
+      "acceptanceCriteria": [
+        "Create lib/onboarding-steps.ts exporting a STEPS array with 9 entries",
+        "Each step has: id (string), title (string), description (string, optional), type ('action' | 'passive' | 'terminal')",
+        "Steps in order: business-details, business-information, address, compliance-transaction, business-members, documents, pricing-fees, compliance-review (type: passive), go-live (type: terminal)",
+        "Export an OnboardingStepConfig TypeScript interface for the step shape",
+        "Export an OnboardingProgress interface with stepId-to-completed mapping",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create mock API persistence layer",
+      "description": "As a developer, I need onboarding progress to persist across page reloads via a mock API module.",
+      "acceptanceCriteria": [
+        "Create lib/mock-onboarding-api.ts",
+        "Export async function fetchOnboardingProgress() that reads from localStorage key 'onboarding-progress' and returns typed OnboardingProgress",
+        "Export async function updateStepStatus(stepId: string, completed: boolean) that updates localStorage and returns updated progress",
+        "Both functions add 200-500ms artificial delay via setTimeout wrapped in a Promise",
+        "If no data exists in localStorage, return default progress with all steps incomplete",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Extend OnboardingContext to use 9-step model and mock API",
+      "description": "As a developer, I need the OnboardingContext to support the full 9-step flow and persist via the mock API so that all components share the same state.",
+      "acceptanceCriteria": [
+        "Update lib/onboarding-context.tsx to import steps from lib/onboarding-steps.ts and mock API from lib/mock-onboarding-api.ts",
+        "On mount, call fetchOnboardingProgress() and hydrate step completion states",
+        "When completeStep is called, also call updateStepStatus to persist",
+        "Steps with type 'passive' cannot be completed via completeStep — add a separate approveComplianceReview() method",
+        "Steps with type 'terminal' are auto-completed when the passive step before them is approved",
+        "Existing OnboardingWizard and OnboardingCard continue to work without changes (backward compatible)",
+        "Expose isWidgetDismissed and setWidgetDismissed in context, backed by localStorage key 'widget-dismissed'",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "The existing 3 steps (business-information, address, compliance-transaction) are a subset of the new 9 steps. Ensure the OnboardingWizard still functions by mapping its steps to the new model."
+    },
+    {
+      "id": "US-004",
+      "title": "Build the expanded widget component with step list",
+      "description": "As a new customer, I want to see a floating expanded widget with all 9 steps and a progress bar so I understand the full activation path.",
+      "acceptanceCriteria": [
+        "Create components/setup-guide-widget.tsx as a 'use client' component",
+        "Renders a fixed-position Card in the bottom-right corner (right-4 bottom-4, z-50)",
+        "Header shows 'Setup guide' title and a collapse button (ChevronDown icon)",
+        "Shows a linear progress bar (shadcn Progress component) with 'X of 9 steps completed' text",
+        "Lists all 9 steps from the OnboardingContext",
+        "Each step shows: checkmark icon if completed, highlighted row if current/active, muted with Lock icon if locked",
+        "Steps are sequential — a step is locked unless all previous steps are completed",
+        "Panel has max-height of 480px with overflow-y-auto for scrolling",
+        "Uses shadcn Card, Button, Progress, and lucide-react icons (Check, Lock, ChevronDown, ChevronUp)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Build the collapsed launcher pill",
+      "description": "As a customer, I want to collapse the widget into a compact pill so it doesn't take up screen space while I work.",
+      "acceptanceCriteria": [
+        "Add a collapsed state to setup-guide-widget.tsx toggled by a boolean state",
+        "Collapsed pill is a small rounded button showing a circular progress ring (SVG) and 'X/9' text",
+        "Clicking the pill expands the widget back to the full step list",
+        "Clicking the collapse button in the expanded header switches to the pill",
+        "Expand/collapse state persists in localStorage key 'widget-expanded'",
+        "Transition between states uses Tailwind transition-all duration-200 for smooth animation",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Add step click navigation and deep-linking",
+      "description": "As a new customer, I want to click a step in the widget to navigate to the corresponding onboarding form.",
+      "acceptanceCriteria": [
+        "Unlocked steps (completed or current) are clickable and navigate to /dashboard/onboarding?step={stepId}",
+        "Uses navigateToOnboarding from OnboardingContext for navigation",
+        "Locked steps are not clickable — cursor shows not-allowed and click is a no-op",
+        "Compliance Review step (type: passive) is never clickable",
+        "Go Live step (type: terminal) is not clickable until compliance review is approved",
+        "Clicking a step also collapses the widget to the pill state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Add Compliance Review waiting state UI",
+      "description": "As a customer who has submitted all info, I want to see that my application is under review with an estimated timeline.",
+      "acceptanceCriteria": [
+        "When all steps before Compliance Review are complete, that step shows an active in-progress state",
+        "Displays text 'Under review — approx. 2–3 business days' below the step title",
+        "Shows a Clock icon from lucide-react (not a spinner)",
+        "A small '(Demo: Approve)' button is visible next to the step that calls approveComplianceReview() from context",
+        "When approved, the Compliance Review step shows a checkmark and Go Live unlocks",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Add Go Live terminal state and completion celebration",
+      "description": "As a customer whose review is approved, I want to see a clear 'You're live' confirmation.",
+      "acceptanceCriteria": [
+        "Go Live step shows locked state (Lock icon, muted text) until Compliance Review is approved",
+        "When Compliance Review is approved, Go Live auto-completes and shows a checkmark with 'Operations Live' text",
+        "Widget header updates progress to '9 of 9 steps completed'",
+        "Progress bar shows 100% fill",
+        "After completion, widget shows a brief 'You're all set!' message in the header area",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Add dismiss and resurface behavior",
+      "description": "As a customer, I want to dismiss the widget and bring it back from settings if needed.",
+      "acceptanceCriteria": [
+        "Expanded widget header has a '...' dropdown menu (shadcn DropdownMenu) with a 'Dismiss setup guide' option",
+        "Dismissing hides the widget completely and stores 'widget-dismissed: true' in localStorage",
+        "Widget does not render on subsequent page loads when dismissed",
+        "Add a 'Show setup guide' toggle in the sidebar nav (nav-secondary.tsx) that sets dismissed to false",
+        "When all 9 steps are complete, widget auto-dismisses after a 3-second delay",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Add widget to dashboard layout",
+      "description": "As a developer, I need the widget rendered in the dashboard layout so it appears on all dashboard pages.",
+      "acceptanceCriteria": [
+        "Import SetupGuideWidget in app/dashboard/layout.tsx",
+        "Render it inside the OnboardingProvider, after the SidebarInset",
+        "Widget is visible on /dashboard, /dashboard/onboarding, and other dashboard sub-routes",
+        "Widget does not interfere with existing sidebar or page content",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Add responsive behavior for mobile viewports",
+      "description": "As a customer on a smaller screen, I want the widget to adapt gracefully.",
+      "acceptanceCriteria": [
+        "On viewports below 768px (detected via useIsMobile hook from hooks/use-mobile.ts), widget defaults to collapsed pill state",
+        "Expanded state on small screens takes full width at bottom of viewport (left-0 right-0 bottom-0)",
+        "Widget does not cause horizontal scrolling or overlap the mobile sidebar trigger",
+        "Uses Tailwind responsive utilities (md:, lg:) consistent with the rest of the codebase",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
