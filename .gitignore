@@ -28,3 +28,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ralph / dev tooling
+scripts/
+tasks/
+archive/
+prd.json
+progress.txt
+.last-branch
+.claude/
