@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useOnboarding } from "@/lib/onboarding-context"
-import { Check, Lock, ChevronDown } from "lucide-react"
+import { Check, Lock, ChevronDown, Clock } from "lucide-react"
 
 function ProgressRing({
   completed,
@@ -51,7 +51,7 @@ function ProgressRing({
 }
 
 export function SetupGuideWidget() {
-  const { steps, navigateToOnboarding } = useOnboarding()
+  const { steps, navigateToOnboarding, approveComplianceReview } = useOnboarding()
 
   const [expanded, setExpanded] = useState(true)
   const [hydrated, setHydrated] = useState(false)
@@ -130,6 +130,9 @@ export function SetupGuideWidget() {
             const isClickable =
               !locked && !isPassive && !(isTerminal && !step.completed)
 
+            const isComplianceInProgress =
+              isPassive && !step.completed && !locked
+
             const handleClick = () => {
               if (!isClickable) return
               navigateToOnboarding(step.id)
@@ -149,7 +152,7 @@ export function SetupGuideWidget() {
                   }
                 }}
                 className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm ${
-                  isActive
+                  isActive || isComplianceInProgress
                     ? "bg-accent font-medium"
                     : locked
                       ? "text-muted-foreground"
@@ -167,13 +170,35 @@ export function SetupGuideWidget() {
                     <div className="flex size-5 items-center justify-center rounded-full bg-primary">
                       <Check className="size-3 text-primary-foreground" />
                     </div>
+                  ) : isComplianceInProgress ? (
+                    <Clock className="size-4 text-amber-500" />
                   ) : locked ? (
                     <Lock className="size-3.5 text-muted-foreground" />
                   ) : (
                     <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
                   )}
                 </div>
-                <span>{step.title}</span>
+                <div className="flex-1 min-w-0">
+                  <span>{step.title}</span>
+                  {isComplianceInProgress && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-xs text-muted-foreground">
+                        Under review — approx. 2–3 business days
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          approveComplianceReview()
+                        }}
+                      >
+                        (Demo: Approve)
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
