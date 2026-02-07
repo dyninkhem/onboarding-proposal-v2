@@ -101,3 +101,18 @@ Thread: https://ampcode.com/threads/T-019c398f-983a-76e3-a5f1-86eb3413efe4
   - `navigateToOnboarding` from context handles the URL construction (`/dashboard/onboarding?step={stepId}`)
   - Collapsing on click is a UX pattern: navigate + minimize widget to avoid blocking the form
 ---
+
+## 2026-02-07 - US-007
+Thread: https://ampcode.com/threads/T-019c3990-f197-7660-bc9b-eadf67a2c26e
+- Added Compliance Review waiting state UI to `components/setup-guide-widget.tsx`
+- When all steps before compliance-review are complete, shows Clock icon (amber) and "Under review — approx. 2–3 business days" text
+- Added "(Demo: Approve)" button that calls `approveComplianceReview()` from context
+- `isComplianceInProgress` derived from: passive type + not completed + not locked
+- When approved, compliance-review shows checkmark and go-live auto-completes
+- Imported `Clock` from lucide-react and `approveComplianceReview` from context
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The `isComplianceInProgress` flag (`isPassive && !step.completed && !locked`) is reusable for any passive step waiting state
+  - Use `e.stopPropagation()` on nested buttons inside clickable rows to prevent parent click handlers from firing
+  - The compliance review row gets the same `bg-accent` highlight as the active step when in-progress
+---

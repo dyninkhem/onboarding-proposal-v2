@@ -51,7 +51,7 @@ function ProgressRing({
 }
 
 export function SetupGuideWidget() {
-  const { steps, navigateToOnboarding, approveComplianceReview } = useOnboarding()
+  const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete } = useOnboarding()
 
   const [expanded, setExpanded] = useState(true)
   const [hydrated, setHydrated] = useState(false)
@@ -106,9 +106,13 @@ export function SetupGuideWidget() {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            {completedCount} of {totalSteps} steps completed
-          </p>
+          {isOnboardingComplete ? (
+            <p className="text-xs font-medium text-primary">You&apos;re all set!</p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              {completedCount} of {totalSteps} steps completed
+            </p>
+          )}
         </div>
         <Button
           variant="ghost"
@@ -180,6 +184,11 @@ export function SetupGuideWidget() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <span>{step.title}</span>
+                  {isTerminal && step.completed && (
+                    <div className="mt-0.5">
+                      <span className="text-xs text-primary font-medium">Operations Live</span>
+                    </div>
+                  )}
                   {isComplianceInProgress && (
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-xs text-muted-foreground">
