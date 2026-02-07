@@ -19,6 +19,7 @@
 - OnboardingStep type in `lib/onboarding-context.tsx` now has `description: string` (added by US-001)
 - Branch `ralph/setup-guide-stripe-refactor` is based off `ralph/onboarding-checklist-widget`, not `main`
 - All US-005 styling changes are className-only on AccordionItem, AccordionTrigger, and AccordionContent — no structural changes
+- The collapsed pill no longer uses ProgressRing SVG — just text-based `completedCount/totalSteps`
 
 ---
 
@@ -86,4 +87,15 @@ Thread: https://ampcode.com/threads/T-019c39d3-4485-703d-9255-7a518d44a69e
 - **Learnings for future iterations:**
   - All changes were className-only — no structural changes needed
   - Tailwind's `data-[state=open]:` prefix works on Radix Accordion's data-state attribute for conditional styling
+---
+
+## 2026-02-07 - US-006
+Thread: https://ampcode.com/threads/T-019c39d4-1bd8-764d-8ed0-74ee6bbe3c5b
+- Removed entire ProgressRing component (function + SVG) from setup-guide-widget.tsx
+- Removed ProgressRing usage from collapsed pill button, keeping text-based `{completedCount}/{totalSteps}` display
+- Pill retains existing styling: bg-primary rounded-full px-3 py-2 shadow-lg
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - Clean removal — ProgressRing was self-contained with no external references
+  - All 6 user stories are now complete
 ---

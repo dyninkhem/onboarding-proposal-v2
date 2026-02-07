@@ -119,7 +119,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": false,
+      "passes": true,
       "notes": "Simple removal of ProgressRing and its usage. The pill becomes a plain text badge. This is the last story — cleanest to do after all other structural changes are complete."
     }
   ]
