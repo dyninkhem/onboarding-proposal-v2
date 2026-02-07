@@ -1,0 +1,177 @@
+## Codebase Patterns
+- Path alias `@/*` maps to project root (tsconfig paths)
+- Project uses Next.js 16, React 19, shadcn/ui components, Tailwind CSS v4, lucide-react icons
+- Existing onboarding context is in `lib/onboarding-context.tsx` with 3 steps (business-information, address, compliance-transaction)
+- Pre-existing typecheck errors exist in `stablecoin/page.tsx`, `dashboard-content.tsx`, `gated-action-button.tsx`, and `onboarding-card.tsx` — these are unrelated to widget work
+- Use `"use client"` directive for client components
+- Guard `localStorage` access with `typeof window === "undefined"` for SSR safety
+- Mock API uses localStorage key `onboarding-progress`; widget-dismissed uses `widget-dismissed`
+- OnboardingWizard has its own internal steps — doesn't consume context steps, so context changes are backward compatible
+- OnboardingStep now has a `type` field (`action` | `passive` | `terminal`) from the step config
+- Use a `hydrated` state flag + `useEffect` to read localStorage initial values safely (prevents SSR hydration mismatch)
+- Widget dismiss state uses `isWidgetDismissed`/`setWidgetDismissed` from OnboardingContext (backed by localStorage `widget-dismissed`)
+- NavSecondary uses `useOnboarding()` — it must be inside OnboardingProvider
+- Use `useIsMobile()` from `hooks/use-mobile.ts` for responsive behavior (breakpoint 768px)
+- On mobile, expanded widget uses `inset-x-0 bottom-0 w-full rounded-b-none` for full-width bottom sheet
+
+---
+
+## 2026-02-07 - US-001
+Thread: https://ampcode.com/threads/T-019c398a-4b2f-72ca-8cca-dc6cf53e77af
+- Created `lib/onboarding-steps.ts` with the 9-step STEPS array and exported interfaces
+- Interfaces: `OnboardingStepConfig` (id, title, description?, type) and `OnboardingProgress` (stepId-to-boolean mapping)
+- Steps in order: business-details, business-information, address, compliance-transaction, business-members, documents, pricing-fees, compliance-review (passive), go-live (terminal)
+- Files changed: `lib/onboarding-steps.ts`
+- **Learnings for future iterations:**
+  - The existing 3 steps in onboarding-context.tsx are a subset of the new 9 steps — US-003 will need to map them
+  - OnboardingProgress uses index signature `[stepId: string]: boolean` for flexibility
+  - Type field distinguishes action (user-completable), passive (system-driven), and terminal (auto-completed) steps
+---
+
+## 2026-02-07 - US-002
+Thread: https://ampcode.com/threads/T-019c398b-34db-715b-9a5e-97f7a7834672
+- Created `lib/mock-onboarding-api.ts` with `fetchOnboardingProgress()` and `updateStepStatus()` functions
+- Uses localStorage key `onboarding-progress` for persistence
+- 200-500ms artificial delay via setTimeout/Promise for realistic async behavior
+- Internal `readProgress()` helper avoids double-delay when `updateStepStatus` reads current state
+- SSR-safe: returns defaults when `window` is undefined
+- Files changed: `lib/mock-onboarding-api.ts`
+- **Learnings for future iterations:**
+  - Keep sync read helpers separate from async public API to avoid compounding delays
+  - Always guard `localStorage` access with `typeof window === "undefined"` check for Next.js SSR
+  ---
+
+  ## 2026-02-07 - US-003
+  Thread: https://ampcode.com/threads/T-019c398c-1824-70d3-bfbe-6668de7a9ffa
+  - Rewrote `lib/onboarding-context.tsx` to import from `onboarding-steps.ts` and `mock-onboarding-api.ts`
+  - On mount, calls `fetchOnboardingProgress()` to hydrate step completion from localStorage
+  - `completeStep` now also persists via `updateStepStatus()`; blocks passive-type steps
+  - Added `approveComplianceReview()` which marks compliance-review and auto-completes terminal (go-live) step
+  - Added `isWidgetDismissed` / `setWidgetDismissed` backed by localStorage key `widget-dismissed`
+  - `OnboardingStep` interface now includes `type` field alongside existing `id`, `title`, `completed`, `hasForm`
+  - `buildSteps()` helper maps STEPS configs + progress into the OnboardingStep shape for backward compat
+  - Files changed: `lib/onboarding-context.tsx`
+  - **Learnings for future iterations:**
+  - OnboardingWizard manages its own internal steps independently — it doesn't consume context steps, so the 9-step expansion is fully backward compatible
+  - The `type` field on OnboardingStep is new — consumers that only use `id`/`title`/`completed`/`hasForm` remain unaffected
+  - Pre-existing typecheck errors (29 total) in stablecoin/page.tsx, dashboard-content.tsx, gated-action-button.tsx, onboarding-card.tsx, chart.tsx, withdrawal-wizard.tsx are unrelated to widget work
+  ---
+
+## 2026-02-07 - US-004
+Thread: https://ampcode.com/threads/T-019c398d-8880-763a-97a0-71a5d3ddafec
+- Created `components/setup-guide-widget.tsx` as a `"use client"` component
+- Fixed-position Card in bottom-right (right-4 bottom-4 z-50), 360px wide
+- Header with "Setup guide" title, "X of 9 steps completed" text, and ChevronDown collapse button
+- Linear Progress bar showing completion percentage
+- Step list with Check icon (completed), Lock icon (locked), empty circle (current/available)
+- Active step highlighted with `bg-accent` and `font-medium`
+- Steps are sequential — locked unless all previous steps completed
+- Max-height 480px with overflow-y-auto scroll area
+- Uses shadcn Card, Button, Progress and lucide-react Check, Lock, ChevronDown icons
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The `isStepLocked` helper checks all previous steps — useful for click navigation in US-006
+  - Widget currently only renders expanded state — US-005 will add collapsed pill toggle
+  - ChevronDown button is wired but has no toggle state yet — US-005 will add that
+---
+
+## 2026-02-07 - US-005
+Thread: https://ampcode.com/threads/T-019c398e-9a76-777c-a2b0-34521efa6ece
+- Added collapsed pill state to `components/setup-guide-widget.tsx` with toggle boolean
+- Collapsed pill: rounded button with SVG circular progress ring (ProgressRing component) and "X/9" text
+- Clicking pill expands widget; clicking ChevronDown in header collapses to pill
+- Expand/collapse state persists in localStorage key `widget-expanded`
+- Transition between states uses Tailwind `transition-all duration-200`
+- Added `hydrated` flag to prevent SSR/hydration mismatch on localStorage read
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - ProgressRing is a local SVG component in setup-guide-widget.tsx — reusable if needed elsewhere
+  - Hydration guard (`hydrated` state + `useEffect`) is needed for any localStorage-driven initial state to avoid SSR mismatch
+  - The pill uses `bg-primary` and `text-primary-foreground` to match the app's theme
+---
+
+## 2026-02-07 - US-006
+Thread: https://ampcode.com/threads/T-019c398f-983a-76e3-a5f1-86eb3413efe4
+- Added step click navigation to `components/setup-guide-widget.tsx`
+- Unlocked action steps (completed or current) are clickable and navigate via `navigateToOnboarding(step.id)`
+- Locked steps show `cursor-not-allowed` and clicks are no-ops
+- Passive steps (compliance-review) are never clickable
+- Terminal steps (go-live) are not clickable until completed (auto-completed when compliance review approved)
+- Clicking a step also collapses the widget to pill state via `setExpanded(false)`
+- Added keyboard accessibility (role="button", tabIndex, Enter/Space handlers)
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - `step.type` field is the key discriminator for click behavior — passive never clickable, terminal only when completed
+  - `navigateToOnboarding` from context handles the URL construction (`/dashboard/onboarding?step={stepId}`)
+  - Collapsing on click is a UX pattern: navigate + minimize widget to avoid blocking the form
+---
+
+## 2026-02-07 - US-007
+Thread: https://ampcode.com/threads/T-019c3990-f197-7660-bc9b-eadf67a2c26e
+- Added Compliance Review waiting state UI to `components/setup-guide-widget.tsx`
+- When all steps before compliance-review are complete, shows Clock icon (amber) and "Under review — approx. 2–3 business days" text
+- Added "(Demo: Approve)" button that calls `approveComplianceReview()` from context
+- `isComplianceInProgress` derived from: passive type + not completed + not locked
+- When approved, compliance-review shows checkmark and go-live auto-completes
+- Imported `Clock` from lucide-react and `approveComplianceReview` from context
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The `isComplianceInProgress` flag (`isPassive && !step.completed && !locked`) is reusable for any passive step waiting state
+  - Use `e.stopPropagation()` on nested buttons inside clickable rows to prevent parent click handlers from firing
+  - The compliance review row gets the same `bg-accent` highlight as the active step when in-progress
+---
+
+## 2026-02-07 - US-008
+Thread: https://ampcode.com/threads/T-019c3992-0302-74f8-bd58-037ec50c845d
+- Added Go Live terminal state and completion celebration to `components/setup-guide-widget.tsx`
+- Go Live step already showed locked state (Lock icon, muted) until Compliance Review approved — existing behavior from US-007
+- When Compliance Review approved, Go Live auto-completes (via `approveComplianceReview` in context) and now shows "Operations Live" text below the step title
+- Header shows "You're all set!" message (in primary color) when all 9 steps are completed, replacing the "X of 9 steps completed" text
+- Progress bar naturally shows 100% when all steps complete (already handled by existing `progressValue` calculation)
+- Used `isOnboardingComplete` from context to drive the completion message
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - `isOnboardingComplete` from context is the canonical flag for all-steps-done state — use it rather than recalculating
+  - Terminal step completion text ("Operations Live") is rendered conditionally via `isTerminal && step.completed`
+  - The "You're all set!" message replaces the step counter in the header — not an additional element
+  ---
+
+  ## 2026-02-07 - US-009
+  Thread: https://ampcode.com/threads/T-019c3992-f5de-703d-98a5-19a9df5b7f0c
+  - Added '...' dropdown menu (shadcn DropdownMenu) to expanded widget header with "Dismiss setup guide" option
+  - Dismissing sets `isWidgetDismissed(true)` via context, hiding widget completely and persisting to localStorage
+  - Widget returns `null` when `isWidgetDismissed` is true — does not render on subsequent page loads
+  - Added "Show setup guide" toggle in `nav-secondary.tsx` that appears only when widget is dismissed, calls `setWidgetDismissed(false)`
+  - Auto-dismiss: when all 9 steps complete, a 3-second timeout fires `setWidgetDismissed(true)` (cleanup on unmount)
+  - Files changed: `components/setup-guide-widget.tsx`, `components/nav-secondary.tsx`
+  - **Learnings for future iterations:**
+  - DropdownMenu imports: `DropdownMenu`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuTrigger` from `@/components/ui/dropdown-menu`
+  - Use `useRef` for setTimeout timers + cleanup in `useEffect` return to avoid stale timers
+  - NavSecondary now depends on OnboardingContext — ensure it's always rendered within OnboardingProvider
+  ---
+
+## 2026-02-07 - US-010
+Thread: https://ampcode.com/threads/T-019c3994-8eb6-7250-af16-1f7cadedfa96
+- Imported `SetupGuideWidget` in `app/dashboard/layout.tsx` and rendered it inside OnboardingProvider, after SidebarProvider
+- Widget is now visible on all dashboard sub-routes (/dashboard, /dashboard/onboarding, etc.)
+- Placed after SidebarProvider so widget is outside the sidebar layout flow — renders as fixed-position overlay without interfering
+- Files changed: `app/dashboard/layout.tsx`
+- **Learnings for future iterations:**
+  - Widget must be inside OnboardingProvider but can be outside SidebarProvider since it doesn't use sidebar context
+  - Fixed-position widget (z-50) renders as overlay — no layout interference with sidebar or page content
+---
+
+## 2026-02-07 - US-011
+Thread: https://ampcode.com/threads/T-019c3995-3985-75f1-8757-d831687b7205
+- Added responsive mobile behavior to `components/setup-guide-widget.tsx`
+- Imported `useIsMobile` from `hooks/use-mobile.ts` (768px breakpoint)
+- On mobile (< 768px), widget defaults to collapsed pill state when no localStorage preference exists
+- Expanded state on mobile takes full width at bottom of viewport (`inset-x-0 bottom-0 w-full rounded-b-none`)
+- Collapsed pill remains positioned `right-4 bottom-4` on all viewports (compact, no overlap)
+- No horizontal scroll issues — full-width bottom sheet avoids overflow
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - `useIsMobile()` returns `false` on SSR (initial `undefined` coerced via `!!`) — safe for conditional rendering after hydration
+  - Mobile expanded uses `inset-x-0` (left-0 right-0) + `w-full` for full-width bottom sheet pattern
+  - `rounded-b-none` removes bottom border-radius when widget is flush with viewport bottom
+---

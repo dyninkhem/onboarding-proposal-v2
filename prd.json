@@ -1,197 +1,126 @@
 {
   "project": "Onboarding Modular Proposal",
-  "branchName": "ralph/onboarding-checklist-widget",
-  "description": "Floating setup-guide widget (Stripe-style) anchored to the bottom-right corner of the dashboard. Shows 9-step onboarding progress, supports expand/collapse, persists state via mock API, and deep-links to existing onboarding forms.",
+  "branchName": "ralph/setup-guide-stripe-refactor",
+  "description": "Refactor the setup guide widget to match Stripe's setup guide pattern: remove step locking, add single-expand accordion detail panels per step, and align visual design with Stripe's compact card layout using existing design tokens.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Define the 9-step onboarding data model",
-      "description": "As a developer, I need a shared step configuration with all 9 activation steps so that the widget and context have a single source of truth.",
+      "title": "Make step descriptions required in the data model",
+      "description": "As a developer, I need each step to have a required description field so that the accordion detail panels have content to display.",
       "acceptanceCriteria": [
-        "Create lib/onboarding-steps.ts exporting a STEPS array with 9 entries",
-        "Each step has: id (string), title (string), description (string, optional), type ('action' | 'passive' | 'terminal')",
-        "Steps in order: business-details, business-information, address, compliance-transaction, business-members, documents, pricing-fees, compliance-review (type: passive), go-live (type: terminal)",
-        "Export an OnboardingStepConfig TypeScript interface for the step shape",
-        "Export an OnboardingProgress interface with stepId-to-completed mapping",
+        "In lib/onboarding-steps.ts, change the OnboardingStepConfig interface field from 'description?: string' to 'description: string'",
+        "Review all 9 step descriptions in the STEPS array and update any that are too generic to be actionable (each should be 1-2 sentences telling the user what they need to do/provide)",
+        "In lib/onboarding-context.tsx, add 'description: string' to the OnboardingStep interface",
+        "In lib/onboarding-context.tsx, update the buildSteps() function to pass through cfg.description to each OnboardingStep",
+        "No other files are changed",
         "Typecheck passes"
       ],
       "priority": 1,
       "passes": true,
-      "notes": ""
+      "notes": "This is a prerequisite for US-003 which renders descriptions in the accordion panels. The existing STEPS array already has descriptions on all 9 entries but the interface marks it optional. The OnboardingStep type in onboarding-context.tsx currently does NOT have a description field — add it and wire it through buildSteps()."
     },
     {
       "id": "US-002",
-      "title": "Create mock API persistence layer",
-      "description": "As a developer, I need onboarding progress to persist across page reloads via a mock API module.",
+      "title": "Remove step locking logic and lock icons",
+      "description": "As a user, I want to click any step regardless of completion order so I can work on whichever step I'm ready for.",
       "acceptanceCriteria": [
-        "Create lib/mock-onboarding-api.ts",
-        "Export async function fetchOnboardingProgress() that reads from localStorage key 'onboarding-progress' and returns typed OnboardingProgress",
-        "Export async function updateStepStatus(stepId: string, completed: boolean) that updates localStorage and returns updated progress",
-        "Both functions add 200-500ms artificial delay via setTimeout wrapped in a Promise",
-        "If no data exists in localStorage, return default progress with all steps incomplete",
-        "Typecheck passes"
+        "In components/setup-guide-widget.tsx, remove the isStepLocked() function entirely",
+        "Remove the 'locked' variable and all references to it in the step rendering logic",
+        "Remove the Lock import from lucide-react",
+        "All 9 steps render with either: filled checkmark circle (complete) or hollow circle (incomplete) — no lock icons",
+        "The Compliance Review passive step still shows Clock icon when in-progress (isPassive && !completed)",
+        "Every incomplete action-type step is clickable (cursor-pointer, navigates via navigateToOnboarding(step.id))",
+        "The isComplianceInProgress check no longer references 'locked' — change to: isPassive && !step.completed",
+        "The cursor-not-allowed class is only applied to: Compliance Review when in passive waiting state, and Go Live when incomplete",
+        "The active/highlighted step (bg-accent) defaults to the first incomplete step via existing currentStepId logic",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "This is a surgical removal. Do NOT restructure the component yet — just remove locking. The flat step list structure remains for now; US-003 will convert it to an accordion. Keep the existing div-based step rendering, just remove lock-related branches."
     },
     {
       "id": "US-003",
-      "title": "Extend OnboardingContext to use 9-step model and mock API",
-      "description": "As a developer, I need the OnboardingContext to support the full 9-step flow and persist via the mock API so that all components share the same state.",
+      "title": "Replace flat step list with single-expand accordion",
+      "description": "As a user, I want to expand a step to see a description and CTA button so I understand what each step involves before navigating.",
       "acceptanceCriteria": [
-        "Update lib/onboarding-context.tsx to import steps from lib/onboarding-steps.ts and mock API from lib/mock-onboarding-api.ts",
-        "On mount, call fetchOnboardingProgress() and hydrate step completion states",
-        "When completeStep is called, also call updateStepStatus to persist",
-        "Steps with type 'passive' cannot be completed via completeStep — add a separate approveComplianceReview() method",
-        "Steps with type 'terminal' are auto-completed when the passive step before them is approved",
-        "Existing OnboardingWizard and OnboardingCard continue to work without changes (backward compatible)",
-        "Expose isWidgetDismissed and setWidgetDismissed in context, backed by localStorage key 'widget-dismissed'",
-        "Typecheck passes"
+        "Import Accordion, AccordionItem, AccordionTrigger, AccordionContent from @/components/ui/accordion",
+        "Replace the step list div with an Accordion component using type='single' and collapsible={true}",
+        "Each step becomes an AccordionItem with value={step.id}",
+        "The AccordionTrigger for each step shows: status icon (checkmark or hollow circle) on the left, step title text, and the built-in chevron on the right",
+        "The AccordionContent for each step shows: the step.description text (from US-001) and a Button CTA",
+        "CTA button label: 'Start' if step is incomplete, 'Review' if step is complete",
+        "CTA button onClick calls navigateToOnboarding(step.id) and setExpanded(false)",
+        "For Compliance Review (type 'passive') when incomplete: detail panel shows 'Under review — approx. 2–3 business days' text and the '(Demo: Approve)' button instead of navigation CTA",
+        "For Go Live (type 'terminal') when incomplete: detail panel shows 'Your account will go live once compliance review is approved' text, no CTA button. When complete: shows 'Operations Live' text",
+        "Default expanded accordion value is set to currentStepId (first incomplete step) on mount using the value and onValueChange props",
+        "Only one step detail panel is open at a time (single-expand behavior)",
+        "Override AccordionItem default border-b class with border-b-0 to remove dividers between steps",
+        "Override AccordionTrigger default hover:underline with hover:no-underline",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": true,
-      "notes": "The existing 3 steps (business-information, address, compliance-transaction) are a subset of the new 9 steps. Ensure the OnboardingWizard still functions by mapping its steps to the new model."
+      "passes": false,
+      "notes": "This is the major structural change. The step rendering moves from a flat div list to Accordion primitives. The status icon (checkmark/circle) and step title go inside AccordionTrigger. The description + CTA go inside AccordionContent. Preserve the existing compliance review and go-live special-case rendering, just move them into the AccordionContent. The AccordionTrigger has a built-in ChevronDownIcon — you don't need to add a separate one. Use controlled accordion: value={expandedStep} onValueChange={setExpandedStep} where expandedStep state is initialized to currentStepId."
     },
     {
       "id": "US-004",
-      "title": "Build the expanded widget component with step list",
-      "description": "As a new customer, I want to see a floating expanded widget with all 9 steps and a progress bar so I understand the full activation path.",
+      "title": "Restyle widget card and header to match Stripe pattern",
+      "description": "As a developer, I need to update the widget card container and header to match Stripe's compact design language.",
       "acceptanceCriteria": [
-        "Create components/setup-guide-widget.tsx as a 'use client' component",
-        "Renders a fixed-position Card in the bottom-right corner (right-4 bottom-4, z-50)",
-        "Header shows 'Setup guide' title and a collapse button (ChevronDown icon)",
-        "Shows a linear progress bar (shadcn Progress component) with 'X of 9 steps completed' text",
-        "Lists all 9 steps from the OnboardingContext",
-        "Each step shows: checkmark icon if completed, highlighted row if current/active, muted with Lock icon if locked",
-        "Steps are sequential — a step is locked unless all previous steps are completed",
-        "Panel has max-height of 480px with overflow-y-auto for scrolling",
-        "Uses shadcn Card, Button, Progress, and lucide-react icons (Check, Lock, ChevronDown, ChevronUp)",
+        "Card container uses: bg-white border border-border rounded-xl shadow-lg, width w-96 on desktop (replaces w-[360px])",
+        "On mobile, preserve existing full-width bottom-anchored behavior (inset-x-0 bottom-0 w-full rounded-b-none)",
+        "Header 'Setup guide' title uses text-sm font-semibold (already correct)",
+        "Subtitle '{completedCount} of {totalSteps} steps completed' uses text-sm text-muted-foreground (change from text-xs)",
+        "Completion state subtitle 'You're all set!' uses text-sm text-primary font-medium (change from text-xs)",
+        "Progress bar uses h-1 class (change from h-1.5) for thinner bar matching Stripe density",
+        "Header padding is compact: pb-2 on CardHeader (already correct)",
+        "Right side of header: MoreHorizontal overflow menu first, then ChevronDown collapse button (preserve existing order and behavior)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Light styling pass on the card shell and header. Do not touch the step list rendering — that was handled in US-003. The Card component from shadcn already provides border and rounded corners, so you may need to override its defaults with className."
     },
     {
       "id": "US-005",
-      "title": "Build the collapsed launcher pill",
-      "description": "As a customer, I want to collapse the widget into a compact pill so it doesn't take up screen space while I work.",
+      "title": "Restyle accordion step rows with Stripe visual treatment",
+      "description": "As a developer, I need to update the accordion trigger and content styling to match Stripe's compact, highlighted-active-step pattern.",
       "acceptanceCriteria": [
-        "Add a collapsed state to setup-guide-widget.tsx toggled by a boolean state",
-        "Collapsed pill is a small rounded button showing a circular progress ring (SVG) and 'X/9' text",
-        "Clicking the pill expands the widget back to the full step list",
-        "Clicking the collapse button in the expanded header switches to the pill",
-        "Expand/collapse state persists in localStorage key 'widget-expanded'",
-        "Transition between states uses Tailwind transition-all duration-200 for smooth animation",
+        "Each AccordionTrigger (collapsed step row) uses px-4 py-2.5 padding, no background color",
+        "Collapsed step hover state: hover:bg-accent/30",
+        "The expanded/active step's AccordionItem has bg-muted/50 background and border-l-2 border-primary left accent",
+        "Use the accordion's data-state attribute to conditionally apply the active styling: [data-state=open] on AccordionItem gets the highlight classes",
+        "AccordionContent detail panel padding: pt-2 pb-3 px-4 (compact spacing below label)",
+        "No dividers between step rows — all AccordionItem elements have border-b-0 (override shadcn default)",
+        "Status icons maintain existing styling: complete = size-5 rounded-full bg-primary with Check icon in text-primary-foreground, incomplete = size-3.5 rounded-full border-2 border-muted-foreground/40",
+        "Step list container has max-h-[480px] overflow-y-auto (preserve existing scroll behavior)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "This is a styling-only pass on the accordion elements created in US-003. Use Tailwind's data-attribute syntax for the active highlight: className='data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary' on AccordionItem."
     },
     {
       "id": "US-006",
-      "title": "Add step click navigation and deep-linking",
-      "description": "As a new customer, I want to click a step in the widget to navigate to the corresponding onboarding form.",
+      "title": "Replace collapsed pill ProgressRing with text-based pill",
+      "description": "As a developer, I need to simplify the collapsed pill by removing the SVG progress ring and using a text-based progress indicator.",
       "acceptanceCriteria": [
-        "Unlocked steps (completed or current) are clickable and navigate to /dashboard/onboarding?step={stepId}",
-        "Uses navigateToOnboarding from OnboardingContext for navigation",
-        "Locked steps are not clickable — cursor shows not-allowed and click is a no-op",
-        "Compliance Review step (type: passive) is never clickable",
-        "Go Live step (type: terminal) is not clickable until compliance review is approved",
-        "Clicking a step also collapses the widget to the pill state",
+        "Remove the entire ProgressRing component (the function and its SVG) from setup-guide-widget.tsx",
+        "The collapsed pill button shows '{completedCount}/{totalSteps}' text in text-sm font-medium text-primary-foreground",
+        "Pill styling: bg-primary rounded-full px-3 py-2 shadow-lg (preserve existing)",
+        "No SVG or circular progress ring renders in the collapsed state",
+        "Clicking the pill still expands the widget (preserve existing behavior)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-007",
-      "title": "Add Compliance Review waiting state UI",
-      "description": "As a customer who has submitted all info, I want to see that my application is under review with an estimated timeline.",
-      "acceptanceCriteria": [
-        "When all steps before Compliance Review are complete, that step shows an active in-progress state",
-        "Displays text 'Under review — approx. 2–3 business days' below the step title",
-        "Shows a Clock icon from lucide-react (not a spinner)",
-        "A small '(Demo: Approve)' button is visible next to the step that calls approveComplianceReview() from context",
-        "When approved, the Compliance Review step shows a checkmark and Go Live unlocks",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 7,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-008",
-      "title": "Add Go Live terminal state and completion celebration",
-      "description": "As a customer whose review is approved, I want to see a clear 'You're live' confirmation.",
-      "acceptanceCriteria": [
-        "Go Live step shows locked state (Lock icon, muted text) until Compliance Review is approved",
-        "When Compliance Review is approved, Go Live auto-completes and shows a checkmark with 'Operations Live' text",
-        "Widget header updates progress to '9 of 9 steps completed'",
-        "Progress bar shows 100% fill",
-        "After completion, widget shows a brief 'You're all set!' message in the header area",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 8,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-009",
-      "title": "Add dismiss and resurface behavior",
-      "description": "As a customer, I want to dismiss the widget and bring it back from settings if needed.",
-      "acceptanceCriteria": [
-        "Expanded widget header has a '...' dropdown menu (shadcn DropdownMenu) with a 'Dismiss setup guide' option",
-        "Dismissing hides the widget completely and stores 'widget-dismissed: true' in localStorage",
-        "Widget does not render on subsequent page loads when dismissed",
-        "Add a 'Show setup guide' toggle in the sidebar nav (nav-secondary.tsx) that sets dismissed to false",
-        "When all 9 steps are complete, widget auto-dismisses after a 3-second delay",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 9,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-010",
-      "title": "Add widget to dashboard layout",
-      "description": "As a developer, I need the widget rendered in the dashboard layout so it appears on all dashboard pages.",
-      "acceptanceCriteria": [
-        "Import SetupGuideWidget in app/dashboard/layout.tsx",
-        "Render it inside the OnboardingProvider, after the SidebarInset",
-        "Widget is visible on /dashboard, /dashboard/onboarding, and other dashboard sub-routes",
-        "Widget does not interfere with existing sidebar or page content",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 10,
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-011",
-      "title": "Add responsive behavior for mobile viewports",
-      "description": "As a customer on a smaller screen, I want the widget to adapt gracefully.",
-      "acceptanceCriteria": [
-        "On viewports below 768px (detected via useIsMobile hook from hooks/use-mobile.ts), widget defaults to collapsed pill state",
-        "Expanded state on small screens takes full width at bottom of viewport (left-0 right-0 bottom-0)",
-        "Widget does not cause horizontal scrolling or overlap the mobile sidebar trigger",
-        "Uses Tailwind responsive utilities (md:, lg:) consistent with the rest of the codebase",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 11,
-      "passes": true,
-      "notes": ""
+      "passes": false,
+      "notes": "Simple removal of ProgressRing and its usage. The pill becomes a plain text badge. This is the last story — cleanest to do after all other structural changes are complete."
     }
   ]
 }

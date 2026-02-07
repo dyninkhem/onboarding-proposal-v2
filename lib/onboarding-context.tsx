@@ -8,6 +8,7 @@ import { fetchOnboardingProgress, updateStepStatus } from "./mock-onboarding-api
 export interface OnboardingStep {
   id: string
   title: string
+  description: string
   completed: boolean
   hasForm?: boolean
   type: "action" | "passive" | "terminal"
@@ -20,6 +21,7 @@ function buildSteps(
   return configs.map((cfg) => ({
     id: cfg.id,
     title: cfg.title,
+    description: cfg.description,
     completed: !!progress[cfg.id],
     hasForm: cfg.type === "action",
     type: cfg.type,

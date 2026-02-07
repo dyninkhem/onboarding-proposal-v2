@@ -1,7 +1,7 @@
 export interface OnboardingStepConfig {
   id: string
   title: string
-  description?: string
+  description: string
   type: "action" | "passive" | "terminal"
 }
 
@@ -13,55 +13,55 @@ export const STEPS: OnboardingStepConfig[] = [
   {
     id: "business-details",
     title: "Business Details",
-    description: "Provide your business name, type, and registration details.",
+    description: "Enter your legal business name, entity type, and registration number.",
     type: "action",
   },
   {
     id: "business-information",
     title: "Business Information",
-    description: "Add additional information about your business operations.",
+    description: "Describe your industry, expected transaction volume, and business model.",
     type: "action",
   },
   {
     id: "address",
     title: "Address",
-    description: "Enter your registered business address.",
+    description: "Provide your registered business address for verification.",
     type: "action",
   },
   {
     id: "compliance-transaction",
     title: "Compliance & Transaction Details",
-    description: "Provide compliance and transaction-related information.",
+    description: "Share your expected payment flows, currencies, and compliance requirements.",
     type: "action",
   },
   {
     id: "business-members",
     title: "Business Members",
-    description: "Add key stakeholders and business members.",
+    description: "Add beneficial owners, directors, and authorized signatories.",
     type: "action",
   },
   {
     id: "documents",
     title: "Documents",
-    description: "Upload required verification documents.",
+    description: "Upload identity documents, proof of address, and incorporation papers.",
     type: "action",
   },
   {
     id: "pricing-fees",
     title: "Pricing & Fees",
-    description: "Review and confirm your pricing and fee structure.",
+    description: "Review your pricing plan and confirm the fee structure for your account.",
     type: "action",
   },
   {
     id: "compliance-review",
     title: "Compliance Review",
-    description: "Your application is under review by the compliance team.",
+    description: "Our compliance team will review your application — this typically takes 2–3 business days.",
     type: "passive",
   },
   {
     id: "go-live",
     title: "Go Live",
-    description: "Your account is activated and ready for live operations.",
+    description: "Once approved, your account will be activated for live operations.",
     type: "terminal",
   },
 ]
