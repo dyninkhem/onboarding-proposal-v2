@@ -127,18 +127,18 @@ export function SetupGuideWidget() {
   }
 
   return (
-    <Card className={`fixed z-50 shadow-lg transition-all duration-200 ${
+    <Card className={`fixed z-50 bg-white border border-border rounded-xl shadow-lg transition-all duration-200 ${
       isMobile
         ? "inset-x-0 bottom-0 w-full rounded-b-none"
-        : "right-4 bottom-4 w-[360px]"
+        : "right-4 bottom-4 w-96"
     }`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
           {isOnboardingComplete ? (
-            <p className="text-xs font-medium text-primary">You&apos;re all set!</p>
+            <p className="text-sm font-medium text-primary">You&apos;re all set!</p>
           ) : (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {completedCount} of {totalSteps} steps completed
             </p>
           )}
@@ -167,7 +167,7 @@ export function SetupGuideWidget() {
         </div>
       </CardHeader>
       <CardContent className="space-y-3 pb-4">
-        <Progress value={progressValue} className="h-1.5" />
+        <Progress value={progressValue} className="h-1" />
         <div className="max-h-[480px] overflow-y-auto">
           <Accordion
             type="single"
