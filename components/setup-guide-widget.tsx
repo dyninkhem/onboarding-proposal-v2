@@ -131,7 +131,7 @@ export function SetupGuideWidget() {
         ? "inset-x-0 bottom-0 w-full rounded-b-none"
         : "right-4 bottom-4 w-96"
     }`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between pb-1.5">
         <div className="space-y-1">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
           {isOnboardingComplete ? (
@@ -165,7 +165,7 @@ export function SetupGuideWidget() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pb-4">
+      <CardContent className="space-y-2 pb-3">
         <Progress value={progressValue} className="h-1" />
         <div className="max-h-[480px] overflow-y-auto">
           <Accordion
@@ -181,8 +181,8 @@ export function SetupGuideWidget() {
 
               return (
                 <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
-                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-4 py-2.5">
-                    <div className="flex items-center gap-3">
+                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-3 py-1.5">
+                    <div className="flex items-center gap-2">
                       <div className="flex size-5 shrink-0 items-center justify-center">
                         {step.completed ? (
                           <div className="flex size-5 items-center justify-center rounded-full bg-primary">
@@ -197,9 +197,9 @@ export function SetupGuideWidget() {
                       <span className="text-sm">{step.title}</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pt-2 pb-3 px-4">
+                  <AccordionContent className="pt-1.5 pb-2 px-3">
                     {isComplianceInProgress ? (
-                      <div className="pl-8 space-y-2">
+                      <div className="pl-7 space-y-2">
                         <p className="text-sm text-muted-foreground">
                           Under review — approx. 2–3 business days
                         </p>
@@ -213,17 +213,17 @@ export function SetupGuideWidget() {
                         </Button>
                       </div>
                     ) : isTerminal && !step.completed ? (
-                      <div className="pl-8">
+                      <div className="pl-7">
                         <p className="text-sm text-muted-foreground">
                           Your account will go live once compliance review is approved
                         </p>
                       </div>
                     ) : isTerminal && step.completed ? (
-                      <div className="pl-8">
+                      <div className="pl-7">
                         <p className="text-sm text-primary font-medium">Operations Live</p>
                       </div>
                     ) : (
-                      <div className="pl-8 space-y-2">
+                      <div className="pl-7 space-y-2">
                         <p className="text-sm text-muted-foreground">{step.description}</p>
                         <Button
                           size="sm"
