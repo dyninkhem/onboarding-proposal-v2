@@ -1,0 +1,101 @@
+## Codebase Patterns
+- Path alias `@/*` maps to project root (tsconfig paths)
+- Project uses Next.js 16, React 19, shadcn/ui components, Tailwind CSS v4, lucide-react icons
+- Existing onboarding context is in `lib/onboarding-context.tsx` with 9 steps and mock API persistence
+- Pre-existing typecheck errors exist in `stablecoin/page.tsx`, `dashboard-content.tsx`, `gated-action-button.tsx`, and `onboarding-card.tsx` — these are unrelated to widget work
+- Use `"use client"` directive for client components
+- Guard `localStorage` access with `typeof window === "undefined"` for SSR safety
+- Mock API uses localStorage key `onboarding-progress`; widget-dismissed uses `widget-dismissed`; widget-expanded uses `widget-expanded`
+- OnboardingStep has a `type` field (`action` | `passive` | `terminal`) from the step config
+- Use a `hydrated` state flag + `useEffect` to read localStorage initial values safely (prevents SSR hydration mismatch)
+- Widget dismiss state uses `isWidgetDismissed`/`setWidgetDismissed` from OnboardingContext (backed by localStorage `widget-dismissed`)
+- NavSecondary uses `useOnboarding()` — it must be inside OnboardingProvider
+- Use `useIsMobile()` from `hooks/use-mobile.ts` for responsive behavior (breakpoint 768px)
+- On mobile, expanded widget uses `inset-x-0 bottom-0 w-full rounded-b-none` for full-width bottom sheet
+- shadcn Accordion component is at `components/ui/accordion.tsx` using `@radix-ui/react-accordion@1.2.2`
+- Accordion default AccordionItem has `border-b last:border-b-0` — override with `border-b-0` for no dividers
+- Accordion default AccordionTrigger has `hover:underline` — override for Stripe styling
+- STEPS array in `lib/onboarding-steps.ts` already has description fields on all 9 entries but interface marks it optional
+- OnboardingStep type in `lib/onboarding-context.tsx` now has `description: string` (added by US-001)
+- Branch `ralph/setup-guide-stripe-refactor` is based off `ralph/onboarding-checklist-widget`, not `main`
+- All US-005 styling changes are className-only on AccordionItem, AccordionTrigger, and AccordionContent — no structural changes
+- The collapsed pill no longer uses ProgressRing SVG — just text-based `completedCount/totalSteps`
+
+---
+
+## 2026-02-07 - US-001
+Thread: https://ampcode.com/threads/T-019c39cd-f8f9-776a-bcf4-87059f5b81ec
+- Made `description` required in `OnboardingStepConfig` interface (removed `?`)
+- Updated all 9 step descriptions to be more specific and actionable
+- Added `description: string` to `OnboardingStep` interface in onboarding-context.tsx
+- Wired `cfg.description` through `buildSteps()` function
+- Files changed: `lib/onboarding-steps.ts`, `lib/onboarding-context.tsx`
+- **Learnings for future iterations:**
+  - The new branch `ralph/setup-guide-stripe-refactor` must be based off `ralph/onboarding-checklist-widget`, not `main`, since the PRD references files/interfaces that only exist on that branch
+  - Pre-existing typecheck errors in stablecoin/page.tsx, dashboard-content.tsx, gated-action-button.tsx, onboarding-card.tsx, chart.tsx, withdrawal-wizard.tsx — all unrelated to widget work
+---
+
+## 2026-02-07 - US-002
+Thread: https://ampcode.com/threads/T-019c39d0-1dd9-7181-be91-6bac13b0bda2
+- Removed `isStepLocked()` function entirely
+- Removed `locked` variable and all references in step rendering
+- Removed `Lock` import from lucide-react
+- Updated `isComplianceInProgress` to `isPassive && !step.completed` (no longer references locked)
+- Updated `isClickable` to remove `!locked` guard — all incomplete action steps are now clickable
+- `cursor-not-allowed` now applies to: Compliance Review when in passive waiting state, and Go Live when incomplete
+- `currentStepId` simplified to `steps.find((s) => !s.completed)?.id`
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The removal was clean — only one file needed changes
+  - Status icon rendering now has 3 branches: completed (checkmark), compliance in-progress (clock), incomplete (hollow circle)
+---
+
+## 2026-02-07 - US-003
+Thread: https://ampcode.com/threads/T-019c39d1-26a7-72e8-b257-31cb251d2399
+- Replaced flat div step list with Accordion (type="single", collapsible) from shadcn/ui
+- Each step is an AccordionItem with status icon + title in AccordionTrigger, description + CTA in AccordionContent
+- CTA button shows "Start" (incomplete) or "Review" (complete), calls navigateToOnboarding and collapses widget
+- Compliance Review (passive): shows "Under review" text + Demo Approve button in AccordionContent
+- Go Live (terminal): shows contextual text based on completion state, no CTA when incomplete
+- Controlled accordion with expandedStep state initialized to currentStepId (first incomplete step)
+- Overrode AccordionItem border-b with border-b-0, AccordionTrigger hover:underline with hover:no-underline
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - Accordion's `value` prop accepts `string | undefined` for single mode — initialize with `currentStepId` which can be undefined when all complete
+  - AccordionContent inner div has default `pt-0 pb-4` padding from shadcn — override via className prop on AccordionContent
+  - Use `pl-8` on content inner divs to align with step title text (past the icon column)
+---
+
+## 2026-02-07 - US-004
+Thread: https://ampcode.com/threads/T-019c39d2-7835-7509-b6d7-47855044b5d5
+- Restyled Card container: added `bg-white border border-border rounded-xl`, changed `w-[360px]` to `w-96`
+- Changed subtitle text from `text-xs` to `text-sm` for both normal and completion states
+- Changed completion text from `text-xs` to `text-sm` with `font-medium text-primary`
+- Changed progress bar from `h-1.5` to `h-1` for thinner Stripe-like density
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - All changes were className-only — no structural changes needed
+  - The shadcn Card component has its own border/rounded defaults; override with explicit className values
+---
+
+## 2026-02-07 - US-005
+Thread: https://ampcode.com/threads/T-019c39d3-4485-703d-9255-7a518d44a69e
+- Restyled AccordionTrigger: changed to `px-4 py-2.5`, added `hover:bg-accent/30`
+- Added active/expanded styling to AccordionItem: `data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary`
+- Restyled AccordionContent padding: `pt-2 pb-3 px-4`
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - All changes were className-only — no structural changes needed
+  - Tailwind's `data-[state=open]:` prefix works on Radix Accordion's data-state attribute for conditional styling
+---
+
+## 2026-02-07 - US-006
+Thread: https://ampcode.com/threads/T-019c39d4-1bd8-764d-8ed0-74ee6bbe3c5b
+- Removed entire ProgressRing component (function + SVG) from setup-guide-widget.tsx
+- Removed ProgressRing usage from collapsed pill button, keeping text-based `{completedCount}/{totalSteps}` display
+- Pill retains existing styling: bg-primary rounded-full px-3 py-2 shadow-lg
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - Clean removal — ProgressRing was self-contained with no external references
+  - All 6 user stories are now complete
+---

@@ -2,19 +2,31 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { STEPS, type OnboardingStepConfig } from "./onboarding-steps"
+import { fetchOnboardingProgress, updateStepStatus } from "./mock-onboarding-api"
 
 export interface OnboardingStep {
   id: string
   title: string
+  description: string
   completed: boolean
   hasForm?: boolean
+  type: "action" | "passive" | "terminal"
 }
 
-const defaultSteps: OnboardingStep[] = [
-  { id: "business-information", title: "Business Information", completed: false, hasForm: true },
-  { id: "address", title: "Address", completed: false, hasForm: true },
-  { id: "compliance-transaction", title: "Compliance & Transaction Details", completed: false, hasForm: true },
-]
+function buildSteps(
+  configs: OnboardingStepConfig[],
+  progress: Record<string, boolean>
+): OnboardingStep[] {
+  return configs.map((cfg) => ({
+    id: cfg.id,
+    title: cfg.title,
+    description: cfg.description,
+    completed: !!progress[cfg.id],
+    hasForm: cfg.type === "action",
+    type: cfg.type,
+  }))
+}
 
 interface OnboardingContextValue {
   steps: OnboardingStep[]
@@ -22,14 +34,13 @@ interface OnboardingContextValue {
   currentStepId: string | null
   setCurrentStepId: React.Dispatch<React.SetStateAction<string | null>>
   isOnboardingComplete: boolean
-  /** Navigate to the onboarding page, optionally at a specific step */
   navigateToOnboarding: (stepId?: string) => void
-  /** Call this before a restricted action. Returns true if action allowed, false if blocked. */
   gateAction: (actionName: string) => boolean
-  /** Mark a step as complete and advance to the next */
   completeStep: (stepId: string) => void
-  /** Go back to a previous step */
   goBackToStep: (stepId: string) => void
+  approveComplianceReview: () => void
+  isWidgetDismissed: boolean
+  setWidgetDismissed: (dismissed: boolean) => void
 }
 
 const OnboardingContext = React.createContext<OnboardingContextValue | null>(null)
@@ -44,20 +55,49 @@ export function useOnboarding() {
 
 interface OnboardingProviderProps {
   children: React.ReactNode
-  /** For demo purposes, set initial completion state */
   initiallyComplete?: boolean
 }
 
+const WIDGET_DISMISSED_KEY = "widget-dismissed"
+
 export function OnboardingProvider({ children, initiallyComplete = false }: OnboardingProviderProps) {
   const router = useRouter()
-  const [steps, setSteps] = React.useState<OnboardingStep[]>(() =>
-    initiallyComplete
-      ? defaultSteps.map((s) => ({ ...s, completed: true }))
-      : defaultSteps
-  )
+
+  const [steps, setSteps] = React.useState<OnboardingStep[]>(() => {
+    const defaultProgress: Record<string, boolean> = {}
+    for (const cfg of STEPS) {
+      defaultProgress[cfg.id] = !!initiallyComplete
+    }
+    return buildSteps(STEPS, defaultProgress)
+  })
+
   const [currentStepId, setCurrentStepId] = React.useState<string | null>(
-    initiallyComplete ? null : "business-information"
+    initiallyComplete ? null : STEPS[0]?.id ?? null
   )
+
+  const [isWidgetDismissed, setWidgetDismissedState] = React.useState(false)
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const dismissed = localStorage.getItem(WIDGET_DISMISSED_KEY) === "true"
+    setWidgetDismissedState(dismissed)
+
+    fetchOnboardingProgress().then((progress) => {
+      const hydrated = buildSteps(STEPS, progress)
+      if (initiallyComplete) return
+      setSteps(hydrated)
+      const firstIncomplete = hydrated.find((s) => !s.completed)
+      setCurrentStepId(firstIncomplete?.id ?? null)
+    })
+  }, [initiallyComplete])
+
+  const setWidgetDismissed = React.useCallback((dismissed: boolean) => {
+    setWidgetDismissedState(dismissed)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(WIDGET_DISMISSED_KEY, String(dismissed))
+    }
+  }, [])
 
   const isOnboardingComplete = React.useMemo(
     () => steps.every((s) => s.completed),
@@ -65,10 +105,8 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
   )
 
   const navigateToOnboarding = React.useCallback((stepId?: string) => {
-    // Determine which step to navigate to
     let targetStepId = stepId
     if (!targetStepId) {
-      // Find first incomplete step
       const firstIncomplete = steps.find((s) => !s.completed)
       targetStepId = firstIncomplete?.id
     }
@@ -83,33 +121,50 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
   const gateAction = React.useCallback(
     (actionName: string): boolean => {
       if (isOnboardingComplete) {
-        return true // Action allowed
+        return true
       }
-      // Block action and navigate to onboarding
       navigateToOnboarding()
-      return false // Action blocked
+      return false
     },
     [isOnboardingComplete, navigateToOnboarding]
   )
 
   const completeStep = React.useCallback((stepId: string) => {
     setSteps((prev) => {
+      const step = prev.find((s) => s.id === stepId)
+      if (!step) return prev
+      if (step.type === "passive") return prev
+
       const updated = prev.map((s) =>
         s.id === stepId ? { ...s, completed: true } : s
       )
-      // Find next incomplete step
       const currentIndex = prev.findIndex((s) => s.id === stepId)
       const nextIncomplete = updated.find((s, i) => i > currentIndex && !s.completed)
       setCurrentStepId(nextIncomplete?.id ?? null)
       return updated
     })
+    updateStepStatus(stepId, true)
+  }, [])
+
+  const approveComplianceReview = React.useCallback(() => {
+    setSteps((prev) => {
+      const updated = prev.map((s) => {
+        if (s.id === "compliance-review") return { ...s, completed: true }
+        if (s.type === "terminal") return { ...s, completed: true }
+        return s
+      })
+      const firstIncomplete = updated.find((s) => !s.completed)
+      setCurrentStepId(firstIncomplete?.id ?? null)
+      return updated
+    })
+    updateStepStatus("compliance-review", true)
+    updateStepStatus("go-live", true)
   }, [])
 
   const goBackToStep = React.useCallback((stepId: string) => {
     setSteps((prev) => {
       const stepIndex = prev.findIndex((s) => s.id === stepId)
       if (stepIndex === -1) return prev
-      // Mark the target step and all subsequent steps as incomplete
       return prev.map((s, i) =>
         i >= stepIndex ? { ...s, completed: false } : s
       )
@@ -127,6 +182,9 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
     gateAction,
     completeStep,
     goBackToStep,
+    approveComplianceReview,
+    isWidgetDismissed,
+    setWidgetDismissed,
   }
 
   return (
