@@ -59,7 +59,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "Two className string replacements — one on the expanded Card, one on the collapsed mini-card. The arbitrary shadow value shadow-[0_8px_30px_rgb(0,0,0,0.12)] is valid Tailwind syntax and requires no config changes."
     }
   ]
