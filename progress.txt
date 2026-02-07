@@ -47,3 +47,19 @@ Thread: https://ampcode.com/threads/T-019c39d0-1dd9-7181-be91-6bac13b0bda2
   - The removal was clean — only one file needed changes
   - Status icon rendering now has 3 branches: completed (checkmark), compliance in-progress (clock), incomplete (hollow circle)
 ---
+
+## 2026-02-07 - US-003
+Thread: https://ampcode.com/threads/T-019c39d1-26a7-72e8-b257-31cb251d2399
+- Replaced flat div step list with Accordion (type="single", collapsible) from shadcn/ui
+- Each step is an AccordionItem with status icon + title in AccordionTrigger, description + CTA in AccordionContent
+- CTA button shows "Start" (incomplete) or "Review" (complete), calls navigateToOnboarding and collapses widget
+- Compliance Review (passive): shows "Under review" text + Demo Approve button in AccordionContent
+- Go Live (terminal): shows contextual text based on completion state, no CTA when incomplete
+- Controlled accordion with expandedStep state initialized to currentStepId (first incomplete step)
+- Overrode AccordionItem border-b with border-b-0, AccordionTrigger hover:underline with hover:no-underline
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - Accordion's `value` prop accepts `string | undefined` for single mode — initialize with `currentStepId` which can be undefined when all complete
+  - AccordionContent inner div has default `pt-0 pb-4` padding from shadcn — override via className prop on AccordionContent
+  - Use `pl-8` on content inner divs to align with step title text (past the icon column)
+---

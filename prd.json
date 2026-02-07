@@ -62,7 +62,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "This is the major structural change. The step rendering moves from a flat div list to Accordion primitives. The status icon (checkmark/circle) and step title go inside AccordionTrigger. The description + CTA go inside AccordionContent. Preserve the existing compliance review and go-live special-case rendering, just move them into the AccordionContent. The AccordionTrigger has a built-in ChevronDownIcon — you don't need to add a separate one. Use controlled accordion: value={expandedStep} onValueChange={setExpandedStep} where expandedStep state is initialized to currentStepId."
     },
     {
