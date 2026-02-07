@@ -76,7 +76,7 @@ export function SetupGuideWidget() {
     return (
       <Card
         onClick={() => setExpanded(true)}
-        className={`fixed z-50 cursor-pointer bg-white border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
+        className={`fixed z-50 cursor-pointer bg-card border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
           isMobile
             ? "inset-x-0 bottom-0 w-full rounded-b-none"
             : "right-4 bottom-4 w-80"
@@ -126,7 +126,7 @@ export function SetupGuideWidget() {
   }
 
   return (
-    <Card className={`fixed z-50 bg-white border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
+    <Card className={`fixed z-50 bg-card border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
       isMobile
         ? "inset-x-0 bottom-0 w-full rounded-b-none"
         : "right-4 bottom-4 w-80"
