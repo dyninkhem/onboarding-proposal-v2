@@ -5,6 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -101,6 +107,7 @@ export function SetupGuideWidget() {
   const progressValue = (completedCount / totalSteps) * 100
 
   const currentStepId = steps.find((s) => !s.completed)?.id
+  const [expandedStep, setExpandedStep] = useState<string | undefined>(currentStepId)
 
   if (!hydrated) return null
   if (isWidgetDismissed) return null
@@ -161,87 +168,80 @@ export function SetupGuideWidget() {
       </CardHeader>
       <CardContent className="space-y-3 pb-4">
         <Progress value={progressValue} className="h-1.5" />
-        <div className="max-h-[480px] overflow-y-auto space-y-0.5">
-          {steps.map((step) => {
-            const isActive = step.id === currentStepId
-            const isPassive = step.type === "passive"
-            const isTerminal = step.type === "terminal"
-            const isClickable =
-              !isPassive && !(isTerminal && !step.completed)
+        <div className="max-h-[480px] overflow-y-auto">
+          <Accordion
+            type="single"
+            collapsible
+            value={expandedStep}
+            onValueChange={setExpandedStep}
+          >
+            {steps.map((step) => {
+              const isPassive = step.type === "passive"
+              const isTerminal = step.type === "terminal"
+              const isComplianceInProgress = isPassive && !step.completed
 
-            const isComplianceInProgress =
-              isPassive && !step.completed
-
-            const handleClick = () => {
-              if (!isClickable) return
-              navigateToOnboarding(step.id)
-              setExpanded(false)
-            }
-
-            return (
-              <div
-                key={step.id}
-                role={isClickable ? "button" : undefined}
-                tabIndex={isClickable ? 0 : undefined}
-                onClick={handleClick}
-                onKeyDown={(e) => {
-                  if (isClickable && (e.key === "Enter" || e.key === " ")) {
-                    e.preventDefault()
-                    handleClick()
-                  }
-                }}
-                className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm ${
-                  isActive || isComplianceInProgress
-                    ? "bg-accent font-medium"
-                    : ""
-                } ${
-                  isClickable
-                    ? "cursor-pointer hover:bg-accent/50"
-                    : isComplianceInProgress || (isTerminal && !step.completed)
-                      ? "cursor-not-allowed"
-                      : ""
-                }`}
-              >
-                <div className="flex size-5 shrink-0 items-center justify-center">
-                  {step.completed ? (
-                    <div className="flex size-5 items-center justify-center rounded-full bg-primary">
-                      <Check className="size-3 text-primary-foreground" />
+              return (
+                <AccordionItem key={step.id} value={step.id} className="border-b-0">
+                  <AccordionTrigger className="hover:no-underline px-2 py-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex size-5 shrink-0 items-center justify-center">
+                        {step.completed ? (
+                          <div className="flex size-5 items-center justify-center rounded-full bg-primary">
+                            <Check className="size-3 text-primary-foreground" />
+                          </div>
+                        ) : isComplianceInProgress ? (
+                          <Clock className="size-4 text-amber-500" />
+                        ) : (
+                          <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
+                        )}
+                      </div>
+                      <span className="text-sm">{step.title}</span>
                     </div>
-                  ) : isComplianceInProgress ? (
-                    <Clock className="size-4 text-amber-500" />
-                  ) : (
-                    <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span>{step.title}</span>
-                  {isTerminal && step.completed && (
-                    <div className="mt-0.5">
-                      <span className="text-xs text-primary font-medium">Operations Live</span>
-                    </div>
-                  )}
-                  {isComplianceInProgress && (
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-muted-foreground">
-                        Under review — approx. 2–3 business days
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          approveComplianceReview()
-                        }}
-                      >
-                        (Demo: Approve)
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )
-          })}
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2">
+                    {isComplianceInProgress ? (
+                      <div className="pl-8 space-y-2">
+                        <p className="text-sm text-muted-foreground">
+                          Under review — approx. 2–3 business days
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-5 px-1.5 text-[10px] text-muted-foreground hover:text-foreground"
+                          onClick={() => approveComplianceReview()}
+                        >
+                          (Demo: Approve)
+                        </Button>
+                      </div>
+                    ) : isTerminal && !step.completed ? (
+                      <div className="pl-8">
+                        <p className="text-sm text-muted-foreground">
+                          Your account will go live once compliance review is approved
+                        </p>
+                      </div>
+                    ) : isTerminal && step.completed ? (
+                      <div className="pl-8">
+                        <p className="text-sm text-primary font-medium">Operations Live</p>
+                      </div>
+                    ) : (
+                      <div className="pl-8 space-y-2">
+                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            navigateToOnboarding(step.id)
+                            setExpanded(false)
+                          }}
+                        >
+                          {step.completed ? "Review" : "Start"}
+                        </Button>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              )
+            })}
+          </Accordion>
         </div>
       </CardContent>
     </Card>
