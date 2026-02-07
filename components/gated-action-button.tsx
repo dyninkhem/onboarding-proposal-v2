@@ -21,6 +21,7 @@ interface GatedActionButtonProps extends ButtonProps {
   showLockIcon?: boolean
   /** Custom tooltip message when gated */
   gatedTooltip?: string
+  children?: React.ReactNode
 }
 
 export function GatedActionButton({
