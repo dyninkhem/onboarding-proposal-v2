@@ -20,49 +20,6 @@ import { useOnboarding } from "@/lib/onboarding-context"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Check, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
 
-function ProgressRing({
-  completed,
-  total,
-  size = 32,
-  strokeWidth = 3,
-}: {
-  completed: number
-  total: number
-  size?: number
-  strokeWidth?: number
-}) {
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const progress = total > 0 ? completed / total : 0
-  const strokeDashoffset = circumference * (1 - progress)
-
-  return (
-    <svg width={size} height={size} className="rotate-[-90deg]">
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        className="text-muted-foreground/20"
-      />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={radius}
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeDasharray={circumference}
-        strokeDashoffset={strokeDashoffset}
-        strokeLinecap="round"
-        className="text-primary transition-all duration-200"
-      />
-    </svg>
-  )
-}
-
 export function SetupGuideWidget() {
   const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete, isWidgetDismissed, setWidgetDismissed } = useOnboarding()
   const isMobile = useIsMobile()
@@ -118,7 +75,6 @@ export function SetupGuideWidget() {
         onClick={() => setExpanded(true)}
         className="fixed right-4 bottom-4 z-50 flex items-center gap-2 rounded-full bg-primary px-3 py-2 shadow-lg transition-all duration-200 hover:opacity-90"
       >
-        <ProgressRing completed={completedCount} total={totalSteps} size={28} strokeWidth={2.5} />
         <span className="text-sm font-medium text-primary-foreground">
           {completedCount}/{totalSteps}
         </span>
