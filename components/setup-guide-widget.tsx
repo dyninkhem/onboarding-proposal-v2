@@ -181,8 +181,8 @@ export function SetupGuideWidget() {
               const isComplianceInProgress = isPassive && !step.completed
 
               return (
-                <AccordionItem key={step.id} value={step.id} className="border-b-0">
-                  <AccordionTrigger className="hover:no-underline px-2 py-2">
+                <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
+                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-4 py-2.5">
                     <div className="flex items-center gap-3">
                       <div className="flex size-5 shrink-0 items-center justify-center">
                         {step.completed ? (
@@ -198,7 +198,7 @@ export function SetupGuideWidget() {
                       <span className="text-sm">{step.title}</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-2">
+                  <AccordionContent className="pt-2 pb-3 px-4">
                     {isComplianceInProgress ? (
                       <div className="pl-8 space-y-2">
                         <p className="text-sm text-muted-foreground">
