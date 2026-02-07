@@ -30,7 +30,7 @@ export const STEPS: OnboardingStepConfig[] = [
   },
   {
     id: "compliance-transaction",
-    title: "Compliance & Transaction Details",
+    title: "Compliance & Transaction",
     description: "Share your expected payment flows, currencies, and compliance requirements.",
     type: "action",
   },

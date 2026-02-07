@@ -33,11 +33,13 @@ if [[ "$TOOL" != "amp" && "$TOOL" != "claude" ]]; then
   echo "Error: Invalid tool '$TOOL'. Must be 'amp' or 'claude'."
   exit 1
 fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PRD_FILE="$SCRIPT_DIR/prd.json"
-PROGRESS_FILE="$SCRIPT_DIR/progress.txt"
-ARCHIVE_DIR="$SCRIPT_DIR/archive"
-LAST_BRANCH_FILE="$SCRIPT_DIR/.last-branch"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PRD_FILE="$PROJECT_ROOT/prd.json"
+PROGRESS_FILE="$PROJECT_ROOT/progress.txt"
+ARCHIVE_DIR="$PROJECT_ROOT/archive"
+LAST_BRANCH_FILE="$PROJECT_ROOT/.last-branch"
 
 # Archive previous run if branch changed
 if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then

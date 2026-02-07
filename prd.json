@@ -1,126 +1,66 @@
 {
   "project": "Onboarding Modular Proposal",
-  "branchName": "ralph/setup-guide-stripe-refactor",
-  "description": "Refactor the setup guide widget to match Stripe's setup guide pattern: remove step locking, add single-expand accordion detail panels per step, and align visual design with Stripe's compact card layout using existing design tokens.",
+  "branchName": "ralph/setup-guide-polish",
+  "description": "Polish pass on the setup guide widget: redesign collapsed state as a compact mini-card with next-step preview, increase information density by tightening padding, and apply a heavier layered shadow for macOS-popover elevation.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Make step descriptions required in the data model",
-      "description": "As a developer, I need each step to have a required description field so that the accordion detail panels have content to display.",
+      "title": "Redesign collapsed state as a mini-card with next-step preview",
+      "description": "As a user, I want the collapsed widget to show me what step is next so I can jump directly to it without expanding the full guide.",
       "acceptanceCriteria": [
-        "In lib/onboarding-steps.ts, change the OnboardingStepConfig interface field from 'description?: string' to 'description: string'",
-        "Review all 9 step descriptions in the STEPS array and update any that are too generic to be actionable (each should be 1-2 sentences telling the user what they need to do/provide)",
-        "In lib/onboarding-context.tsx, add 'description: string' to the OnboardingStep interface",
-        "In lib/onboarding-context.tsx, update the buildSteps() function to pass through cfg.description to each OnboardingStep",
-        "No other files are changed",
-        "Typecheck passes"
+        "Replace the collapsed <button> element (lines 72-83 of setup-guide-widget.tsx) with a Card component from @/components/ui/card",
+        "The collapsed mini-card uses the same container styling as the expanded widget: bg-white border border-border rounded-xl, width w-96 on desktop, fixed right-4 bottom-4 z-50",
+        "On mobile (isMobile), the collapsed mini-card uses inset-x-0 bottom-0 w-full rounded-b-none — same as expanded state",
+        "Row 1: 'Setup guide' title in text-sm font-semibold on the left. A Maximize2 icon button (import from lucide-react) on the right that calls setExpanded(true). No dismiss/X button in the collapsed state",
+        "Row 2: Progress component with h-1 class, same progressValue calculation as expanded state, full width",
+        "Row 3 when steps remain: 'Next:' in text-sm text-muted-foreground, followed by the next actionable step name in text-sm text-primary font-medium as a clickable span/button",
+        "The 'next actionable step' is determined by: steps.find(s => !s.completed && s.type === 'action'). If no action steps remain incomplete, fall back to steps.find(s => !s.completed) and render it as static text (not a link)",
+        "Clicking the step name calls navigateToOnboarding(stepId) with e.stopPropagation() to prevent card expansion",
+        "Clicking anywhere else on the card calls setExpanded(true)",
+        "Row 3 when all steps complete (isOnboardingComplete): show 'All steps complete' in text-sm text-primary font-medium instead of Next: line",
+        "The ProgressRing component is already removed — confirm no remnants exist",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 1,
       "passes": true,
-      "notes": "This is a prerequisite for US-003 which renders descriptions in the accordion panels. The existing STEPS array already has descriptions on all 9 entries but the interface marks it optional. The OnboardingStep type in onboarding-context.tsx currently does NOT have a description field — add it and wire it through buildSteps()."
+      "notes": "This is the biggest change. The collapsed state goes from a simple rounded pill button to a 3-row Card. Use Card and CardContent from shadcn. The card-level onClick should call setExpanded(true), but the step name link inside Row 3 must use e.stopPropagation() so it navigates instead of expanding. Import Maximize2 from lucide-react (confirmed available in ^0.468.0). Keep the existing expanded/setExpanded state, localStorage persistence for widget-expanded, hydration guard, and auto-dismiss timer — only the collapsed branch's JSX changes."
     },
     {
       "id": "US-002",
-      "title": "Remove step locking logic and lock icons",
-      "description": "As a user, I want to click any step regardless of completion order so I can work on whichever step I'm ready for.",
+      "title": "Increase information density by tightening padding",
+      "description": "As a user, I want the expanded widget to feel tight and scannable like a dense sidebar nav so it takes up less vertical space.",
       "acceptanceCriteria": [
-        "In components/setup-guide-widget.tsx, remove the isStepLocked() function entirely",
-        "Remove the 'locked' variable and all references to it in the step rendering logic",
-        "Remove the Lock import from lucide-react",
-        "All 9 steps render with either: filled checkmark circle (complete) or hollow circle (incomplete) — no lock icons",
-        "The Compliance Review passive step still shows Clock icon when in-progress (isPassive && !completed)",
-        "Every incomplete action-type step is clickable (cursor-pointer, navigates via navigateToOnboarding(step.id))",
-        "The isComplianceInProgress check no longer references 'locked' — change to: isPassive && !step.completed",
-        "The cursor-not-allowed class is only applied to: Compliance Review when in passive waiting state, and Go Live when incomplete",
-        "The active/highlighted step (bg-accent) defaults to the first incomplete step via existing currentStepId logic",
+        "CardHeader: change padding from pb-2 to pb-1.5",
+        "CardContent: change space-y-3 to space-y-2, and change pb-4 to pb-3",
+        "AccordionTrigger: change from px-4 py-2.5 to px-3 py-1.5",
+        "AccordionTrigger inner flex container: change gap-3 to gap-2",
+        "AccordionContent: change from pt-2 pb-3 px-4 to pt-1.5 pb-2 px-3",
+        "AccordionContent inner div indent: change pl-8 to pl-7 to match tighter gap",
+        "All padding changes are className-only — no structural JSX changes",
+        "The collapsed mini-card (from US-001) should use p-3 for its internal padding",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "This is a surgical removal. Do NOT restructure the component yet — just remove locking. The flat step list structure remains for now; US-003 will convert it to an accordion. Keep the existing div-based step rendering, just remove lock-related branches."
+      "notes": "Pure className value changes — no structural modifications. Every change is a string replacement in existing className attributes. The pl-7 indent on AccordionContent inner divs aligns the description text with the step title (past the narrower icon+gap column). Apply p-3 to the collapsed mini-card's CardContent as well for consistent density."
     },
     {
       "id": "US-003",
-      "title": "Replace flat step list with single-expand accordion",
-      "description": "As a user, I want to expand a step to see a description and CTA button so I understand what each step involves before navigating.",
+      "title": "Apply heavier layered shadow to both widget states",
+      "description": "As a developer, I need the widget to have stronger visual elevation so it feels like a macOS popover floating above the dashboard.",
       "acceptanceCriteria": [
-        "Import Accordion, AccordionItem, AccordionTrigger, AccordionContent from @/components/ui/accordion",
-        "Replace the step list div with an Accordion component using type='single' and collapsible={true}",
-        "Each step becomes an AccordionItem with value={step.id}",
-        "The AccordionTrigger for each step shows: status icon (checkmark or hollow circle) on the left, step title text, and the built-in chevron on the right",
-        "The AccordionContent for each step shows: the step.description text (from US-001) and a Button CTA",
-        "CTA button label: 'Start' if step is incomplete, 'Review' if step is complete",
-        "CTA button onClick calls navigateToOnboarding(step.id) and setExpanded(false)",
-        "For Compliance Review (type 'passive') when incomplete: detail panel shows 'Under review — approx. 2–3 business days' text and the '(Demo: Approve)' button instead of navigation CTA",
-        "For Go Live (type 'terminal') when incomplete: detail panel shows 'Your account will go live once compliance review is approved' text, no CTA button. When complete: shows 'Operations Live' text",
-        "Default expanded accordion value is set to currentStepId (first incomplete step) on mount using the value and onValueChange props",
-        "Only one step detail panel is open at a time (single-expand behavior)",
-        "Override AccordionItem default border-b class with border-b-0 to remove dividers between steps",
-        "Override AccordionTrigger default hover:underline with hover:no-underline",
+        "On the expanded Card className, replace shadow-lg with shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+        "On the collapsed mini-card Card/container className, apply the same shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+        "The shadow is present on both desktop and mobile layouts",
+        "No other styling or structural changes in this story",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
       "passes": true,
-      "notes": "This is the major structural change. The step rendering moves from a flat div list to Accordion primitives. The status icon (checkmark/circle) and step title go inside AccordionTrigger. The description + CTA go inside AccordionContent. Preserve the existing compliance review and go-live special-case rendering, just move them into the AccordionContent. The AccordionTrigger has a built-in ChevronDownIcon — you don't need to add a separate one. Use controlled accordion: value={expandedStep} onValueChange={setExpandedStep} where expandedStep state is initialized to currentStepId."
-    },
-    {
-      "id": "US-004",
-      "title": "Restyle widget card and header to match Stripe pattern",
-      "description": "As a developer, I need to update the widget card container and header to match Stripe's compact design language.",
-      "acceptanceCriteria": [
-        "Card container uses: bg-white border border-border rounded-xl shadow-lg, width w-96 on desktop (replaces w-[360px])",
-        "On mobile, preserve existing full-width bottom-anchored behavior (inset-x-0 bottom-0 w-full rounded-b-none)",
-        "Header 'Setup guide' title uses text-sm font-semibold (already correct)",
-        "Subtitle '{completedCount} of {totalSteps} steps completed' uses text-sm text-muted-foreground (change from text-xs)",
-        "Completion state subtitle 'You're all set!' uses text-sm text-primary font-medium (change from text-xs)",
-        "Progress bar uses h-1 class (change from h-1.5) for thinner bar matching Stripe density",
-        "Header padding is compact: pb-2 on CardHeader (already correct)",
-        "Right side of header: MoreHorizontal overflow menu first, then ChevronDown collapse button (preserve existing order and behavior)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 4,
-      "passes": true,
-      "notes": "Light styling pass on the card shell and header. Do not touch the step list rendering — that was handled in US-003. The Card component from shadcn already provides border and rounded corners, so you may need to override its defaults with className."
-    },
-    {
-      "id": "US-005",
-      "title": "Restyle accordion step rows with Stripe visual treatment",
-      "description": "As a developer, I need to update the accordion trigger and content styling to match Stripe's compact, highlighted-active-step pattern.",
-      "acceptanceCriteria": [
-        "Each AccordionTrigger (collapsed step row) uses px-4 py-2.5 padding, no background color",
-        "Collapsed step hover state: hover:bg-accent/30",
-        "The expanded/active step's AccordionItem has bg-muted/50 background and border-l-2 border-primary left accent",
-        "Use the accordion's data-state attribute to conditionally apply the active styling: [data-state=open] on AccordionItem gets the highlight classes",
-        "AccordionContent detail panel padding: pt-2 pb-3 px-4 (compact spacing below label)",
-        "No dividers between step rows — all AccordionItem elements have border-b-0 (override shadcn default)",
-        "Status icons maintain existing styling: complete = size-5 rounded-full bg-primary with Check icon in text-primary-foreground, incomplete = size-3.5 rounded-full border-2 border-muted-foreground/40",
-        "Step list container has max-h-[480px] overflow-y-auto (preserve existing scroll behavior)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 5,
-      "passes": true,
-      "notes": "This is a styling-only pass on the accordion elements created in US-003. Use Tailwind's data-attribute syntax for the active highlight: className='data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary' on AccordionItem."
-    },
-    {
-      "id": "US-006",
-      "title": "Replace collapsed pill ProgressRing with text-based pill",
-      "description": "As a developer, I need to simplify the collapsed pill by removing the SVG progress ring and using a text-based progress indicator.",
-      "acceptanceCriteria": [
-        "Remove the entire ProgressRing component (the function and its SVG) from setup-guide-widget.tsx",
-        "The collapsed pill button shows '{completedCount}/{totalSteps}' text in text-sm font-medium text-primary-foreground",
-        "Pill styling: bg-primary rounded-full px-3 py-2 shadow-lg (preserve existing)",
-        "No SVG or circular progress ring renders in the collapsed state",
-        "Clicking the pill still expands the widget (preserve existing behavior)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 6,
-      "passes": true,
-      "notes": "Simple removal of ProgressRing and its usage. The pill becomes a plain text badge. This is the last story — cleanest to do after all other structural changes are complete."
+      "notes": "Two className string replacements — one on the expanded Card, one on the collapsed mini-card. The arbitrary shadow value shadow-[0_8px_30px_rgb(0,0,0,0.12)] is valid Tailwind syntax and requires no config changes."
     }
   ]
 }

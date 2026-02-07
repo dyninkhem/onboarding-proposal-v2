@@ -3,7 +3,6 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { STEPS, type OnboardingStepConfig } from "./onboarding-steps"
-import { fetchOnboardingProgress, updateStepStatus } from "./mock-onboarding-api"
 
 export interface OnboardingStep {
   id: string
@@ -82,14 +81,6 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
 
     const dismissed = localStorage.getItem(WIDGET_DISMISSED_KEY) === "true"
     setWidgetDismissedState(dismissed)
-
-    fetchOnboardingProgress().then((progress) => {
-      const hydrated = buildSteps(STEPS, progress)
-      if (initiallyComplete) return
-      setSteps(hydrated)
-      const firstIncomplete = hydrated.find((s) => !s.completed)
-      setCurrentStepId(firstIncomplete?.id ?? null)
-    })
   }, [initiallyComplete])
 
   const setWidgetDismissed = React.useCallback((dismissed: boolean) => {
@@ -143,7 +134,6 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
       setCurrentStepId(nextIncomplete?.id ?? null)
       return updated
     })
-    updateStepStatus(stepId, true)
   }, [])
 
   const approveComplianceReview = React.useCallback(() => {
@@ -157,8 +147,6 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
       setCurrentStepId(firstIncomplete?.id ?? null)
       return updated
     })
-    updateStepStatus("compliance-review", true)
-    updateStepStatus("go-live", true)
   }, [])
 
   const goBackToStep = React.useCallback((stepId: string) => {

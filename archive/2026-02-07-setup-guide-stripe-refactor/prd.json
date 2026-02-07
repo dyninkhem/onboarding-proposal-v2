@@ -1,0 +1,126 @@
+{
+  "project": "Onboarding Modular Proposal",
+  "branchName": "ralph/setup-guide-stripe-refactor",
+  "description": "Refactor the setup guide widget to match Stripe's setup guide pattern: remove step locking, add single-expand accordion detail panels per step, and align visual design with Stripe's compact card layout using existing design tokens.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Make step descriptions required in the data model",
+      "description": "As a developer, I need each step to have a required description field so that the accordion detail panels have content to display.",
+      "acceptanceCriteria": [
+        "In lib/onboarding-steps.ts, change the OnboardingStepConfig interface field from 'description?: string' to 'description: string'",
+        "Review all 9 step descriptions in the STEPS array and update any that are too generic to be actionable (each should be 1-2 sentences telling the user what they need to do/provide)",
+        "In lib/onboarding-context.tsx, add 'description: string' to the OnboardingStep interface",
+        "In lib/onboarding-context.tsx, update the buildSteps() function to pass through cfg.description to each OnboardingStep",
+        "No other files are changed",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "This is a prerequisite for US-003 which renders descriptions in the accordion panels. The existing STEPS array already has descriptions on all 9 entries but the interface marks it optional. The OnboardingStep type in onboarding-context.tsx currently does NOT have a description field — add it and wire it through buildSteps()."
+    },
+    {
+      "id": "US-002",
+      "title": "Remove step locking logic and lock icons",
+      "description": "As a user, I want to click any step regardless of completion order so I can work on whichever step I'm ready for.",
+      "acceptanceCriteria": [
+        "In components/setup-guide-widget.tsx, remove the isStepLocked() function entirely",
+        "Remove the 'locked' variable and all references to it in the step rendering logic",
+        "Remove the Lock import from lucide-react",
+        "All 9 steps render with either: filled checkmark circle (complete) or hollow circle (incomplete) — no lock icons",
+        "The Compliance Review passive step still shows Clock icon when in-progress (isPassive && !completed)",
+        "Every incomplete action-type step is clickable (cursor-pointer, navigates via navigateToOnboarding(step.id))",
+        "The isComplianceInProgress check no longer references 'locked' — change to: isPassive && !step.completed",
+        "The cursor-not-allowed class is only applied to: Compliance Review when in passive waiting state, and Go Live when incomplete",
+        "The active/highlighted step (bg-accent) defaults to the first incomplete step via existing currentStepId logic",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "This is a surgical removal. Do NOT restructure the component yet — just remove locking. The flat step list structure remains for now; US-003 will convert it to an accordion. Keep the existing div-based step rendering, just remove lock-related branches."
+    },
+    {
+      "id": "US-003",
+      "title": "Replace flat step list with single-expand accordion",
+      "description": "As a user, I want to expand a step to see a description and CTA button so I understand what each step involves before navigating.",
+      "acceptanceCriteria": [
+        "Import Accordion, AccordionItem, AccordionTrigger, AccordionContent from @/components/ui/accordion",
+        "Replace the step list div with an Accordion component using type='single' and collapsible={true}",
+        "Each step becomes an AccordionItem with value={step.id}",
+        "The AccordionTrigger for each step shows: status icon (checkmark or hollow circle) on the left, step title text, and the built-in chevron on the right",
+        "The AccordionContent for each step shows: the step.description text (from US-001) and a Button CTA",
+        "CTA button label: 'Start' if step is incomplete, 'Review' if step is complete",
+        "CTA button onClick calls navigateToOnboarding(step.id) and setExpanded(false)",
+        "For Compliance Review (type 'passive') when incomplete: detail panel shows 'Under review — approx. 2–3 business days' text and the '(Demo: Approve)' button instead of navigation CTA",
+        "For Go Live (type 'terminal') when incomplete: detail panel shows 'Your account will go live once compliance review is approved' text, no CTA button. When complete: shows 'Operations Live' text",
+        "Default expanded accordion value is set to currentStepId (first incomplete step) on mount using the value and onValueChange props",
+        "Only one step detail panel is open at a time (single-expand behavior)",
+        "Override AccordionItem default border-b class with border-b-0 to remove dividers between steps",
+        "Override AccordionTrigger default hover:underline with hover:no-underline",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "This is the major structural change. The step rendering moves from a flat div list to Accordion primitives. The status icon (checkmark/circle) and step title go inside AccordionTrigger. The description + CTA go inside AccordionContent. Preserve the existing compliance review and go-live special-case rendering, just move them into the AccordionContent. The AccordionTrigger has a built-in ChevronDownIcon — you don't need to add a separate one. Use controlled accordion: value={expandedStep} onValueChange={setExpandedStep} where expandedStep state is initialized to currentStepId."
+    },
+    {
+      "id": "US-004",
+      "title": "Restyle widget card and header to match Stripe pattern",
+      "description": "As a developer, I need to update the widget card container and header to match Stripe's compact design language.",
+      "acceptanceCriteria": [
+        "Card container uses: bg-white border border-border rounded-xl shadow-lg, width w-96 on desktop (replaces w-[360px])",
+        "On mobile, preserve existing full-width bottom-anchored behavior (inset-x-0 bottom-0 w-full rounded-b-none)",
+        "Header 'Setup guide' title uses text-sm font-semibold (already correct)",
+        "Subtitle '{completedCount} of {totalSteps} steps completed' uses text-sm text-muted-foreground (change from text-xs)",
+        "Completion state subtitle 'You're all set!' uses text-sm text-primary font-medium (change from text-xs)",
+        "Progress bar uses h-1 class (change from h-1.5) for thinner bar matching Stripe density",
+        "Header padding is compact: pb-2 on CardHeader (already correct)",
+        "Right side of header: MoreHorizontal overflow menu first, then ChevronDown collapse button (preserve existing order and behavior)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "Light styling pass on the card shell and header. Do not touch the step list rendering — that was handled in US-003. The Card component from shadcn already provides border and rounded corners, so you may need to override its defaults with className."
+    },
+    {
+      "id": "US-005",
+      "title": "Restyle accordion step rows with Stripe visual treatment",
+      "description": "As a developer, I need to update the accordion trigger and content styling to match Stripe's compact, highlighted-active-step pattern.",
+      "acceptanceCriteria": [
+        "Each AccordionTrigger (collapsed step row) uses px-4 py-2.5 padding, no background color",
+        "Collapsed step hover state: hover:bg-accent/30",
+        "The expanded/active step's AccordionItem has bg-muted/50 background and border-l-2 border-primary left accent",
+        "Use the accordion's data-state attribute to conditionally apply the active styling: [data-state=open] on AccordionItem gets the highlight classes",
+        "AccordionContent detail panel padding: pt-2 pb-3 px-4 (compact spacing below label)",
+        "No dividers between step rows — all AccordionItem elements have border-b-0 (override shadcn default)",
+        "Status icons maintain existing styling: complete = size-5 rounded-full bg-primary with Check icon in text-primary-foreground, incomplete = size-3.5 rounded-full border-2 border-muted-foreground/40",
+        "Step list container has max-h-[480px] overflow-y-auto (preserve existing scroll behavior)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "This is a styling-only pass on the accordion elements created in US-003. Use Tailwind's data-attribute syntax for the active highlight: className='data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary' on AccordionItem."
+    },
+    {
+      "id": "US-006",
+      "title": "Replace collapsed pill ProgressRing with text-based pill",
+      "description": "As a developer, I need to simplify the collapsed pill by removing the SVG progress ring and using a text-based progress indicator.",
+      "acceptanceCriteria": [
+        "Remove the entire ProgressRing component (the function and its SVG) from setup-guide-widget.tsx",
+        "The collapsed pill button shows '{completedCount}/{totalSteps}' text in text-sm font-medium text-primary-foreground",
+        "Pill styling: bg-primary rounded-full px-3 py-2 shadow-lg (preserve existing)",
+        "No SVG or circular progress ring renders in the collapsed state",
+        "Clicking the pill still expands the widget (preserve existing behavior)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "Simple removal of ProgressRing and its usage. The pill becomes a plain text badge. This is the last story — cleanest to do after all other structural changes are complete."
+    }
+  ]
+}

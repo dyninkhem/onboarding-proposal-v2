@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useOnboarding } from "@/lib/onboarding-context"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Check, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
+import { Check, ChevronDown, Clock, Maximize2, MoreHorizontal } from "lucide-react"
 
 export function SetupGuideWidget() {
   const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete, isWidgetDismissed, setWidgetDismissed } = useOnboarding()
@@ -70,26 +70,69 @@ export function SetupGuideWidget() {
   if (isWidgetDismissed) return null
 
   if (!expanded) {
+    const nextActionStep = steps.find((s) => !s.completed && s.type === "action")
+    const nextStep = nextActionStep ?? steps.find((s) => !s.completed)
+
     return (
-      <button
+      <Card
         onClick={() => setExpanded(true)}
-        className="fixed right-4 bottom-4 z-50 flex items-center gap-2 rounded-full bg-primary px-3 py-2 shadow-lg transition-all duration-200 hover:opacity-90"
+        className={`fixed z-50 cursor-pointer bg-white border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
+          isMobile
+            ? "inset-x-0 bottom-0 w-full rounded-b-none"
+            : "right-4 bottom-4 w-80"
+        }`}
       >
-        <span className="text-sm font-medium text-primary-foreground">
-          {completedCount}/{totalSteps}
-        </span>
-      </button>
+        <CardContent className="px-2.5 py-2 space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold">Setup guide</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpanded(true)
+              }}
+            >
+              <Maximize2 className="size-4" />
+            </Button>
+          </div>
+          <Progress value={progressValue} className="h-1" />
+          <div className="text-sm">
+            {isOnboardingComplete ? (
+              <span className="text-primary font-medium">All steps complete</span>
+            ) : nextStep ? (
+              <div className="flex items-center gap-1">
+                <span className="text-muted-foreground">Next:</span>
+                {nextActionStep ? (
+                  <button
+                    className="text-primary font-medium hover:underline"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigateToOnboarding(nextStep.id)
+                    }}
+                  >
+                    {nextStep.title}
+                  </button>
+                ) : (
+                  <span className="text-primary font-medium">{nextStep.title}</span>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <Card className={`fixed z-50 bg-white border border-border rounded-xl shadow-lg transition-all duration-200 ${
+    <Card className={`fixed z-50 bg-white border border-border rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-200 ${
       isMobile
         ? "inset-x-0 bottom-0 w-full rounded-b-none"
-        : "right-4 bottom-4 w-96"
+        : "right-4 bottom-4 w-80"
     }`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <div className="space-y-1">
+      <CardHeader className="flex flex-row items-center justify-between px-3 pt-1.5 pb-0">
+        <div className="space-y-0.5">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
           {isOnboardingComplete ? (
             <p className="text-sm font-medium text-primary">You&apos;re all set!</p>
@@ -122,7 +165,7 @@ export function SetupGuideWidget() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 pb-4">
+      <CardContent className="space-y-1 px-3 pb-1">
         <Progress value={progressValue} className="h-1" />
         <div className="max-h-[480px] overflow-y-auto">
           <Accordion
@@ -138,8 +181,8 @@ export function SetupGuideWidget() {
 
               return (
                 <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
-                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-4 py-2.5">
-                    <div className="flex items-center gap-3">
+                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
+                    <div className="flex items-center gap-2">
                       <div className="flex size-5 shrink-0 items-center justify-center">
                         {step.completed ? (
                           <div className="flex size-5 items-center justify-center rounded-full bg-primary">
@@ -154,9 +197,9 @@ export function SetupGuideWidget() {
                       <span className="text-sm">{step.title}</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="pt-2 pb-3 px-4">
+                  <AccordionContent className="pt-0.5 pb-1 px-2.5">
                     {isComplianceInProgress ? (
-                      <div className="pl-8 space-y-2">
+                      <div className="pl-6 space-y-1.5">
                         <p className="text-sm text-muted-foreground">
                           Under review — approx. 2–3 business days
                         </p>
@@ -170,17 +213,17 @@ export function SetupGuideWidget() {
                         </Button>
                       </div>
                     ) : isTerminal && !step.completed ? (
-                      <div className="pl-8">
+                      <div className="pl-6">
                         <p className="text-sm text-muted-foreground">
                           Your account will go live once compliance review is approved
                         </p>
                       </div>
                     ) : isTerminal && step.completed ? (
-                      <div className="pl-8">
+                      <div className="pl-6">
                         <p className="text-sm text-primary font-medium">Operations Live</p>
                       </div>
                     ) : (
-                      <div className="pl-8 space-y-2">
+                      <div className="pl-6 space-y-1.5">
                         <p className="text-sm text-muted-foreground">{step.description}</p>
                         <Button
                           size="sm"
