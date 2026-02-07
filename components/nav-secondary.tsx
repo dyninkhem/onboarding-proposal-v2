@@ -4,9 +4,11 @@ import { useEffect, useState } from "react"
 import type * as React from "react"
 import type { LucideIcon } from "lucide-react"
 import { useTheme } from "next-themes"
+import { Rocket } from "lucide-react"
 
 import { Switch } from "@/components/ui/switch"
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar"
+import { useOnboarding } from "@/lib/onboarding-context"
 
 export function NavSecondary({
   items,
@@ -22,6 +24,7 @@ export function NavSecondary({
   const { setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [isDark, setIsDark] = useState(false)
+  const { isWidgetDismissed, setWidgetDismissed } = useOnboarding()
 
   useEffect(() => {
     setMounted(true)
@@ -43,6 +46,20 @@ export function NavSecondary({
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
+          {isWidgetDismissed && (
+            <SidebarMenuItem>
+              <div
+                className="flex items-center justify-between w-full px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer"
+                onClick={() => setWidgetDismissed(false)}
+              >
+                <div className="flex items-center gap-2">
+                  <Rocket className="size-4" />
+                  <span>Show setup guide</span>
+                </div>
+                <Switch className="scale-75 pointer-events-none" checked={false} onCheckedChange={() => {}} />
+              </div>
+            </SidebarMenuItem>
+          )}
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               {item.isToggle ? (

@@ -1,11 +1,17 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useOnboarding } from "@/lib/onboarding-context"
-import { Check, Lock, ChevronDown, Clock } from "lucide-react"
+import { Check, Lock, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
 
 function ProgressRing({
   completed,
@@ -51,10 +57,11 @@ function ProgressRing({
 }
 
 export function SetupGuideWidget() {
-  const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete } = useOnboarding()
+  const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete, isWidgetDismissed, setWidgetDismissed } = useOnboarding()
 
   const [expanded, setExpanded] = useState(true)
   const [hydrated, setHydrated] = useState(false)
+  const autoDismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -72,6 +79,19 @@ export function SetupGuideWidget() {
     }
   }, [expanded, hydrated])
 
+  useEffect(() => {
+    if (isOnboardingComplete && hydrated && !isWidgetDismissed) {
+      autoDismissTimerRef.current = setTimeout(() => {
+        setWidgetDismissed(true)
+      }, 3000)
+    }
+    return () => {
+      if (autoDismissTimerRef.current) {
+        clearTimeout(autoDismissTimerRef.current)
+      }
+    }
+  }, [isOnboardingComplete, hydrated, isWidgetDismissed, setWidgetDismissed])
+
   const completedCount = steps.filter((s) => s.completed).length
   const totalSteps = steps.length
   const progressValue = (completedCount / totalSteps) * 100
@@ -86,6 +106,7 @@ export function SetupGuideWidget() {
   const currentStepId = steps.find((s, i) => !s.completed && !isStepLocked(i))?.id
 
   if (!hydrated) return null
+  if (isWidgetDismissed) return null
 
   if (!expanded) {
     return (
@@ -114,14 +135,28 @@ export function SetupGuideWidget() {
             </p>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          onClick={() => setExpanded(false)}
-        >
-          <ChevronDown className="size-4" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-8">
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setWidgetDismissed(true)}>
+                Dismiss setup guide
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setExpanded(false)}
+          >
+            <ChevronDown className="size-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3 pb-4">
         <Progress value={progressValue} className="h-1.5" />
