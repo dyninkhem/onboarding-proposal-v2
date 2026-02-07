@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useOnboarding } from "@/lib/onboarding-context"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { Check, Lock, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
 
 function ProgressRing({
@@ -58,6 +59,7 @@ function ProgressRing({
 
 export function SetupGuideWidget() {
   const { steps, navigateToOnboarding, approveComplianceReview, isOnboardingComplete, isWidgetDismissed, setWidgetDismissed } = useOnboarding()
+  const isMobile = useIsMobile()
 
   const [expanded, setExpanded] = useState(true)
   const [hydrated, setHydrated] = useState(false)
@@ -68,10 +70,12 @@ export function SetupGuideWidget() {
       const stored = localStorage.getItem("widget-expanded")
       if (stored !== null) {
         setExpanded(stored === "true")
+      } else if (isMobile) {
+        setExpanded(false)
       }
       setHydrated(true)
     }
-  }, [])
+  }, [isMobile])
 
   useEffect(() => {
     if (hydrated && typeof window !== "undefined") {
@@ -123,7 +127,11 @@ export function SetupGuideWidget() {
   }
 
   return (
-    <Card className="fixed right-4 bottom-4 z-50 w-[360px] shadow-lg transition-all duration-200">
+    <Card className={`fixed z-50 shadow-lg transition-all duration-200 ${
+      isMobile
+        ? "inset-x-0 bottom-0 w-full rounded-b-none"
+        : "right-4 bottom-4 w-[360px]"
+    }`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div className="space-y-1">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
