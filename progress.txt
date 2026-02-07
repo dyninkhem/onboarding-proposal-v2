@@ -8,6 +8,7 @@
 - Mock API uses localStorage key `onboarding-progress`; widget-dismissed uses `widget-dismissed`
 - OnboardingWizard has its own internal steps — doesn't consume context steps, so context changes are backward compatible
 - OnboardingStep now has a `type` field (`action` | `passive` | `terminal`) from the step config
+- Use a `hydrated` state flag + `useEffect` to read localStorage initial values safely (prevents SSR hydration mismatch)
 
 ---
 
@@ -68,4 +69,19 @@ Thread: https://ampcode.com/threads/T-019c398d-8880-763a-97a0-71a5d3ddafec
   - The `isStepLocked` helper checks all previous steps — useful for click navigation in US-006
   - Widget currently only renders expanded state — US-005 will add collapsed pill toggle
   - ChevronDown button is wired but has no toggle state yet — US-005 will add that
+---
+
+## 2026-02-07 - US-005
+Thread: https://ampcode.com/threads/T-019c398e-9a76-777c-a2b0-34521efa6ece
+- Added collapsed pill state to `components/setup-guide-widget.tsx` with toggle boolean
+- Collapsed pill: rounded button with SVG circular progress ring (ProgressRing component) and "X/9" text
+- Clicking pill expands widget; clicking ChevronDown in header collapses to pill
+- Expand/collapse state persists in localStorage key `widget-expanded`
+- Transition between states uses Tailwind `transition-all duration-200`
+- Added `hydrated` flag to prevent SSR/hydration mismatch on localStorage read
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - ProgressRing is a local SVG component in setup-guide-widget.tsx — reusable if needed elsewhere
+  - Hydration guard (`hydrated` state + `useEffect`) is needed for any localStorage-driven initial state to avoid SSR mismatch
+  - The pill uses `bg-primary` and `text-primary-foreground` to match the app's theme
 ---

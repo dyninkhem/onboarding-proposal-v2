@@ -51,7 +51,7 @@ function ProgressRing({
 }
 
 export function SetupGuideWidget() {
-  const { steps } = useOnboarding()
+  const { steps, navigateToOnboarding } = useOnboarding()
 
   const [expanded, setExpanded] = useState(true)
   const [hydrated, setHydrated] = useState(false)
@@ -125,15 +125,40 @@ export function SetupGuideWidget() {
           {steps.map((step, index) => {
             const locked = isStepLocked(index)
             const isActive = step.id === currentStepId
+            const isPassive = step.type === "passive"
+            const isTerminal = step.type === "terminal"
+            const isClickable =
+              !locked && !isPassive && !(isTerminal && !step.completed)
+
+            const handleClick = () => {
+              if (!isClickable) return
+              navigateToOnboarding(step.id)
+              setExpanded(false)
+            }
 
             return (
               <div
                 key={step.id}
+                role={isClickable ? "button" : undefined}
+                tabIndex={isClickable ? 0 : undefined}
+                onClick={handleClick}
+                onKeyDown={(e) => {
+                  if (isClickable && (e.key === "Enter" || e.key === " ")) {
+                    e.preventDefault()
+                    handleClick()
+                  }
+                }}
                 className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm ${
                   isActive
                     ? "bg-accent font-medium"
                     : locked
                       ? "text-muted-foreground"
+                      : ""
+                } ${
+                  isClickable
+                    ? "cursor-pointer hover:bg-accent/50"
+                    : locked || (isTerminal && !step.completed)
+                      ? "cursor-not-allowed"
                       : ""
                 }`}
               >
