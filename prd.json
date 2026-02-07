@@ -82,7 +82,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": "Light styling pass on the card shell and header. Do not touch the step list rendering — that was handled in US-003. The Card component from shadcn already provides border and rounded corners, so you may need to override its defaults with className."
     },
     {
@@ -102,7 +102,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": false,
+      "passes": true,
       "notes": "This is a styling-only pass on the accordion elements created in US-003. Use Tailwind's data-attribute syntax for the active highlight: className='data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary' on AccordionItem."
     },
     {
