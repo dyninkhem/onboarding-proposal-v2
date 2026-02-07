@@ -1,0 +1,66 @@
+{
+  "project": "Onboarding Modular Proposal",
+  "branchName": "ralph/setup-guide-polish",
+  "description": "Polish pass on the setup guide widget: redesign collapsed state as a compact mini-card with next-step preview, increase information density by tightening padding, and apply a heavier layered shadow for macOS-popover elevation.",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Redesign collapsed state as a mini-card with next-step preview",
+      "description": "As a user, I want the collapsed widget to show me what step is next so I can jump directly to it without expanding the full guide.",
+      "acceptanceCriteria": [
+        "Replace the collapsed <button> element (lines 72-83 of setup-guide-widget.tsx) with a Card component from @/components/ui/card",
+        "The collapsed mini-card uses the same container styling as the expanded widget: bg-white border border-border rounded-xl, width w-96 on desktop, fixed right-4 bottom-4 z-50",
+        "On mobile (isMobile), the collapsed mini-card uses inset-x-0 bottom-0 w-full rounded-b-none — same as expanded state",
+        "Row 1: 'Setup guide' title in text-sm font-semibold on the left. A Maximize2 icon button (import from lucide-react) on the right that calls setExpanded(true). No dismiss/X button in the collapsed state",
+        "Row 2: Progress component with h-1 class, same progressValue calculation as expanded state, full width",
+        "Row 3 when steps remain: 'Next:' in text-sm text-muted-foreground, followed by the next actionable step name in text-sm text-primary font-medium as a clickable span/button",
+        "The 'next actionable step' is determined by: steps.find(s => !s.completed && s.type === 'action'). If no action steps remain incomplete, fall back to steps.find(s => !s.completed) and render it as static text (not a link)",
+        "Clicking the step name calls navigateToOnboarding(stepId) with e.stopPropagation() to prevent card expansion",
+        "Clicking anywhere else on the card calls setExpanded(true)",
+        "Row 3 when all steps complete (isOnboardingComplete): show 'All steps complete' in text-sm text-primary font-medium instead of Next: line",
+        "The ProgressRing component is already removed — confirm no remnants exist",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "This is the biggest change. The collapsed state goes from a simple rounded pill button to a 3-row Card. Use Card and CardContent from shadcn. The card-level onClick should call setExpanded(true), but the step name link inside Row 3 must use e.stopPropagation() so it navigates instead of expanding. Import Maximize2 from lucide-react (confirmed available in ^0.468.0). Keep the existing expanded/setExpanded state, localStorage persistence for widget-expanded, hydration guard, and auto-dismiss timer — only the collapsed branch's JSX changes."
+    },
+    {
+      "id": "US-002",
+      "title": "Increase information density by tightening padding",
+      "description": "As a user, I want the expanded widget to feel tight and scannable like a dense sidebar nav so it takes up less vertical space.",
+      "acceptanceCriteria": [
+        "CardHeader: change padding from pb-2 to pb-1.5",
+        "CardContent: change space-y-3 to space-y-2, and change pb-4 to pb-3",
+        "AccordionTrigger: change from px-4 py-2.5 to px-3 py-1.5",
+        "AccordionTrigger inner flex container: change gap-3 to gap-2",
+        "AccordionContent: change from pt-2 pb-3 px-4 to pt-1.5 pb-2 px-3",
+        "AccordionContent inner div indent: change pl-8 to pl-7 to match tighter gap",
+        "All padding changes are className-only — no structural JSX changes",
+        "The collapsed mini-card (from US-001) should use p-3 for its internal padding",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Pure className value changes — no structural modifications. Every change is a string replacement in existing className attributes. The pl-7 indent on AccordionContent inner divs aligns the description text with the step title (past the narrower icon+gap column). Apply p-3 to the collapsed mini-card's CardContent as well for consistent density."
+    },
+    {
+      "id": "US-003",
+      "title": "Apply heavier layered shadow to both widget states",
+      "description": "As a developer, I need the widget to have stronger visual elevation so it feels like a macOS popover floating above the dashboard.",
+      "acceptanceCriteria": [
+        "On the expanded Card className, replace shadow-lg with shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+        "On the collapsed mini-card Card/container className, apply the same shadow-[0_8px_30px_rgb(0,0,0,0.12)]",
+        "The shadow is present on both desktop and mobile layouts",
+        "No other styling or structural changes in this story",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": "Two className string replacements — one on the expanded Card, one on the collapsed mini-card. The arbitrary shadow value shadow-[0_8px_30px_rgb(0,0,0,0.12)] is valid Tailwind syntax and requires no config changes."
+    }
+  ]
+}
