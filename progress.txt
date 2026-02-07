@@ -1,0 +1,35 @@
+## Codebase Patterns
+- Path alias `@/*` maps to project root (tsconfig paths)
+- Project uses Next.js 16, React 19, shadcn/ui components, Tailwind CSS v4, lucide-react icons
+- Existing onboarding context is in `lib/onboarding-context.tsx` with 3 steps (business-information, address, compliance-transaction)
+- Pre-existing typecheck errors exist in `stablecoin/page.tsx`, `dashboard-content.tsx`, `gated-action-button.tsx`, and `onboarding-card.tsx` — these are unrelated to widget work
+- Use `"use client"` directive for client components
+- Guard `localStorage` access with `typeof window === "undefined"` for SSR safety
+- Mock API uses localStorage key `onboarding-progress`; widget-dismissed uses `widget-dismissed`
+
+---
+
+## 2026-02-07 - US-001
+Thread: https://ampcode.com/threads/T-019c398a-4b2f-72ca-8cca-dc6cf53e77af
+- Created `lib/onboarding-steps.ts` with the 9-step STEPS array and exported interfaces
+- Interfaces: `OnboardingStepConfig` (id, title, description?, type) and `OnboardingProgress` (stepId-to-boolean mapping)
+- Steps in order: business-details, business-information, address, compliance-transaction, business-members, documents, pricing-fees, compliance-review (passive), go-live (terminal)
+- Files changed: `lib/onboarding-steps.ts`
+- **Learnings for future iterations:**
+  - The existing 3 steps in onboarding-context.tsx are a subset of the new 9 steps — US-003 will need to map them
+  - OnboardingProgress uses index signature `[stepId: string]: boolean` for flexibility
+  - Type field distinguishes action (user-completable), passive (system-driven), and terminal (auto-completed) steps
+---
+
+## 2026-02-07 - US-002
+Thread: https://ampcode.com/threads/T-019c398b-34db-715b-9a5e-97f7a7834672
+- Created `lib/mock-onboarding-api.ts` with `fetchOnboardingProgress()` and `updateStepStatus()` functions
+- Uses localStorage key `onboarding-progress` for persistence
+- 200-500ms artificial delay via setTimeout/Promise for realistic async behavior
+- Internal `readProgress()` helper avoids double-delay when `updateStepStatus` reads current state
+- SSR-safe: returns defaults when `window` is undefined
+- Files changed: `lib/mock-onboarding-api.ts`
+- **Learnings for future iterations:**
+  - Keep sync read helpers separate from async public API to avoid compounding delays
+  - Always guard `localStorage` access with `typeof window === "undefined"` check for Next.js SSR
+---
