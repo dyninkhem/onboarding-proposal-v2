@@ -50,7 +50,7 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
+      "passes": true,
       "notes": "The existing 3 steps (business-information, address, compliance-transaction) are a subset of the new 9 steps. Ensure the OnboardingWizard still functions by mapping its steps to the new model."
     },
     {
@@ -71,7 +71,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

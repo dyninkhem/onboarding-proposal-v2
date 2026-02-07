@@ -6,6 +6,8 @@
 - Use `"use client"` directive for client components
 - Guard `localStorage` access with `typeof window === "undefined"` for SSR safety
 - Mock API uses localStorage key `onboarding-progress`; widget-dismissed uses `widget-dismissed`
+- OnboardingWizard has its own internal steps — doesn't consume context steps, so context changes are backward compatible
+- OnboardingStep now has a `type` field (`action` | `passive` | `terminal`) from the step config
 
 ---
 
@@ -32,4 +34,38 @@ Thread: https://ampcode.com/threads/T-019c398b-34db-715b-9a5e-97f7a7834672
 - **Learnings for future iterations:**
   - Keep sync read helpers separate from async public API to avoid compounding delays
   - Always guard `localStorage` access with `typeof window === "undefined"` check for Next.js SSR
+  ---
+
+  ## 2026-02-07 - US-003
+  Thread: https://ampcode.com/threads/T-019c398c-1824-70d3-bfbe-6668de7a9ffa
+  - Rewrote `lib/onboarding-context.tsx` to import from `onboarding-steps.ts` and `mock-onboarding-api.ts`
+  - On mount, calls `fetchOnboardingProgress()` to hydrate step completion from localStorage
+  - `completeStep` now also persists via `updateStepStatus()`; blocks passive-type steps
+  - Added `approveComplianceReview()` which marks compliance-review and auto-completes terminal (go-live) step
+  - Added `isWidgetDismissed` / `setWidgetDismissed` backed by localStorage key `widget-dismissed`
+  - `OnboardingStep` interface now includes `type` field alongside existing `id`, `title`, `completed`, `hasForm`
+  - `buildSteps()` helper maps STEPS configs + progress into the OnboardingStep shape for backward compat
+  - Files changed: `lib/onboarding-context.tsx`
+  - **Learnings for future iterations:**
+  - OnboardingWizard manages its own internal steps independently — it doesn't consume context steps, so the 9-step expansion is fully backward compatible
+  - The `type` field on OnboardingStep is new — consumers that only use `id`/`title`/`completed`/`hasForm` remain unaffected
+  - Pre-existing typecheck errors (29 total) in stablecoin/page.tsx, dashboard-content.tsx, gated-action-button.tsx, onboarding-card.tsx, chart.tsx, withdrawal-wizard.tsx are unrelated to widget work
+  ---
+
+## 2026-02-07 - US-004
+Thread: https://ampcode.com/threads/T-019c398d-8880-763a-97a0-71a5d3ddafec
+- Created `components/setup-guide-widget.tsx` as a `"use client"` component
+- Fixed-position Card in bottom-right (right-4 bottom-4 z-50), 360px wide
+- Header with "Setup guide" title, "X of 9 steps completed" text, and ChevronDown collapse button
+- Linear Progress bar showing completion percentage
+- Step list with Check icon (completed), Lock icon (locked), empty circle (current/available)
+- Active step highlighted with `bg-accent` and `font-medium`
+- Steps are sequential — locked unless all previous steps completed
+- Max-height 480px with overflow-y-auto scroll area
+- Uses shadcn Card, Button, Progress and lucide-react Check, Lock, ChevronDown icons
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The `isStepLocked` helper checks all previous steps — useful for click navigation in US-006
+  - Widget currently only renders expanded state — US-005 will add collapsed pill toggle
+  - ChevronDown button is wired but has no toggle state yet — US-005 will add that
 ---
