@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,7 @@ export default function SignupBusinessPage() {
   );
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const submittingRef = useRef(false);
   useEffect(() => setMounted(true), []);
 
   const fullNameValid = localFullName.trim().length >= 2;
@@ -74,25 +75,29 @@ export default function SignupBusinessPage() {
     fullNameValid && businessNameValid && countryValid && useCaseValid;
 
   const handleFinish = async () => {
+    if (submittingRef.current || !formValid) return;
+    submittingRef.current = true;
     setSubmitError(null);
-    if (!formValid) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    if (localCountry === UNSUPPORTED_COUNTRY_VALUE) {
-      setSubmitError("country_unsupported");
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      if (localCountry === UNSUPPORTED_COUNTRY_VALUE) {
+        setSubmitError("country_unsupported");
+        return;
+      }
+      updateField("fullName", localFullName.trim());
+      updateField("businessName", localBusinessName.trim());
+      updateField(
+        "dbaNames",
+        localDbaNames.trim() ? localDbaNames.trim().split(/\s*,\s*/) : []
+      );
+      updateField("country", localCountry);
+      updateField("useCase", localUseCase);
+      router.push("/signup/success");
+    } finally {
       setLoading(false);
-      return;
+      submittingRef.current = false;
     }
-    updateField("fullName", localFullName.trim());
-    updateField("businessName", localBusinessName.trim());
-    updateField(
-      "dbaNames",
-      localDbaNames.trim() ? localDbaNames.trim().split(/\s*,\s*/) : []
-    );
-    updateField("country", localCountry);
-    updateField("useCase", localUseCase);
-    setLoading(false);
-    router.push("/signup/success");
   };
 
   useEffect(() => {

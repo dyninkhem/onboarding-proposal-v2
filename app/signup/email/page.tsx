@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -23,72 +23,45 @@ import { InlineError } from "@/components/signup/inline-error";
 import { useSignupFlow } from "@/components/signup/signup-flow-context";
 import { InfoTooltip } from "@/components/ui/tooltip";
 
-const PERSONAL_DOMAINS = [
-  "gmail.com",
-  "yahoo.com",
-  "outlook.com",
-  "hotmail.com",
-  "icloud.com",
-  "aol.com",
-  "mail.com",
-  "protonmail.com",
-];
-
 const DEMO_EXISTING_EMAIL = "existing@paxos.com";
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
-function isPersonalEmail(value: string): boolean {
-  const domain = value.trim().split("@")[1]?.toLowerCase();
-  return !!domain && PERSONAL_DOMAINS.includes(domain);
-}
-
 export default function SignupEmailPage() {
   const router = useRouter();
   const { email, updateField } = useSignupFlow();
   const [localEmail, setLocalEmail] = useState(email);
-  const [touched, setTouched] = useState(false);
   const [blurred, setBlurred] = useState(false);
   const [submitError, setSubmitError] = useState<"exists" | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const submittingRef = useRef(false);
   useEffect(() => setMounted(true), []);
 
-  const runValidation = useCallback(() => {
-    if (!localEmail.trim()) return { valid: false, error: null };
-    if (!isValidEmail(localEmail))
-      return { valid: false, error: "Please enter a valid email address." };
-    if (isPersonalEmail(localEmail))
-      return {
-        valid: false,
-        error: "Please use your company email for business accounts",
-      };
-    return { valid: true, error: null };
-  }, [localEmail]);
-
-  const { valid, error } = runValidation();
-  const showError = blurred && !valid && error;
-
-  const handleBlur = () => {
-    setBlurred(true);
-    setTouched(true);
-  };
+  const valid = localEmail.trim().length > 0 && isValidEmail(localEmail);
+  const error = blurred && !valid && localEmail.trim().length > 0
+    ? "Please enter a valid email address."
+    : null;
 
   const handleContinue = async () => {
+    if (submittingRef.current || !valid) return;
+    submittingRef.current = true;
     setSubmitError(null);
-    if (!valid) return;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    if (localEmail.trim().toLowerCase() === DEMO_EXISTING_EMAIL) {
-      setSubmitError("exists");
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      if (localEmail.trim().toLowerCase() === DEMO_EXISTING_EMAIL) {
+        setSubmitError("exists");
+        return;
+      }
+      updateField("email", localEmail.trim());
+      router.push("/signup/verify");
+    } finally {
       setLoading(false);
-      return;
+      submittingRef.current = false;
     }
-    updateField("email", localEmail.trim());
-    setLoading(false);
-    router.push("/signup/verify");
   };
 
   return (
@@ -129,20 +102,20 @@ export default function SignupEmailPage() {
         <FieldGroup>
           <Field>
             <FieldLabel className="inline-flex items-center gap-1.5">
-              Work email
+              Email
               {mounted && (
-                <InfoTooltip content="Use your company email address. This will be your primary login." />
+                <InfoTooltip content="This will be your primary login." />
               )}
             </FieldLabel>
             <Input
               type="email"
-              placeholder="you@company.com"
+              placeholder="you@example.com"
               value={localEmail}
               onChange={(e) => setLocalEmail(e.target.value)}
-              onBlur={handleBlur}
-              aria-invalid={showError ? true : undefined}
+              onBlur={() => setBlurred(true)}
+              aria-invalid={error ? true : undefined}
             />
-            {showError && (
+            {error && (
               <FieldDescription className="text-destructive">
                 {error}
               </FieldDescription>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ export default function SignupPasskeyPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [passkeyError, setPasskeyError] = useState(false);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
   const handlePasskeySuccess = () => {
     router.push("/signup/business");
@@ -26,11 +27,17 @@ export default function SignupPasskeyPage() {
   };
 
   const handleCreatePasskey = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setPasskeyError(false);
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setLoading(false);
-    setModalOpen(true);
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      setModalOpen(true);
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
   };
 
   useEffect(() => {

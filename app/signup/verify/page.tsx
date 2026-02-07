@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { OTPForm } from "@/components/otp-form";
@@ -16,17 +16,23 @@ export default function SignupVerifyPage() {
   const [codeBlurred, setCodeBlurred] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const submittingRef = useRef(false);
 
   const codeValid = /^\d{6}$/.test(localCode.trim());
   const codeError = codeBlurred && !codeValid && localCode.trim().length > 0;
 
   const handleVerify = async () => {
-    if (!codeValid) return;
+    if (submittingRef.current || !codeValid) return;
+    submittingRef.current = true;
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    updateField("code", localCode.trim());
-    setLoading(false);
-    router.push("/signup/passkey");
+    try {
+      await new Promise((r) => setTimeout(r, 500));
+      updateField("code", localCode.trim());
+      router.push("/signup/passkey");
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
   };
 
   useEffect(() => {

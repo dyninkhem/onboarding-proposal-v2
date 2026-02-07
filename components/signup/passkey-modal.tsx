@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,12 +36,26 @@ export function PasskeyModal({
 }: PasskeyModalProps) {
   const [simulating, setSimulating] = useState(false);
   const [success, setSuccess] = useState(false);
+  const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    if (open) {
+      cancelledRef.current = false;
+    } else {
+      cancelledRef.current = true;
+      setSimulating(false);
+      setSuccess(false);
+    }
+  }, [open]);
 
   const handleSimulate = async () => {
+    if (simulating) return;
     setSimulating(true);
     await new Promise((r) => setTimeout(r, 800));
+    if (cancelledRef.current) return;
     setSuccess(true);
     await new Promise((r) => setTimeout(r, 1800));
+    if (cancelledRef.current) return;
     setSimulating(false);
     setSuccess(false);
     onOpenChange(false);
