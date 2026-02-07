@@ -37,7 +37,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "This is a surgical removal. Do NOT restructure the component yet — just remove locking. The flat step list structure remains for now; US-003 will convert it to an accordion. Keep the existing div-based step rendering, just remove lock-related branches."
     },
     {

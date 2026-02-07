@@ -32,3 +32,18 @@ Thread: https://ampcode.com/threads/T-019c39cd-f8f9-776a-bcf4-87059f5b81ec
   - The new branch `ralph/setup-guide-stripe-refactor` must be based off `ralph/onboarding-checklist-widget`, not `main`, since the PRD references files/interfaces that only exist on that branch
   - Pre-existing typecheck errors in stablecoin/page.tsx, dashboard-content.tsx, gated-action-button.tsx, onboarding-card.tsx, chart.tsx, withdrawal-wizard.tsx — all unrelated to widget work
 ---
+
+## 2026-02-07 - US-002
+Thread: https://ampcode.com/threads/T-019c39d0-1dd9-7181-be91-6bac13b0bda2
+- Removed `isStepLocked()` function entirely
+- Removed `locked` variable and all references in step rendering
+- Removed `Lock` import from lucide-react
+- Updated `isComplianceInProgress` to `isPassive && !step.completed` (no longer references locked)
+- Updated `isClickable` to remove `!locked` guard — all incomplete action steps are now clickable
+- `cursor-not-allowed` now applies to: Compliance Review when in passive waiting state, and Go Live when incomplete
+- `currentStepId` simplified to `steps.find((s) => !s.completed)?.id`
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - The removal was clean — only one file needed changes
+  - Status icon rendering now has 3 branches: completed (checkmark), compliance in-progress (clock), incomplete (hollow circle)
+---
