@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useOnboarding } from "@/lib/onboarding-context"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { Check, Lock, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
+import { Check, ChevronDown, Clock, MoreHorizontal } from "lucide-react"
 
 function ProgressRing({
   completed,
@@ -100,14 +100,7 @@ export function SetupGuideWidget() {
   const totalSteps = steps.length
   const progressValue = (completedCount / totalSteps) * 100
 
-  const isStepLocked = (index: number): boolean => {
-    for (let i = 0; i < index; i++) {
-      if (!steps[i].completed) return true
-    }
-    return false
-  }
-
-  const currentStepId = steps.find((s, i) => !s.completed && !isStepLocked(i))?.id
+  const currentStepId = steps.find((s) => !s.completed)?.id
 
   if (!hydrated) return null
   if (isWidgetDismissed) return null
@@ -169,16 +162,15 @@ export function SetupGuideWidget() {
       <CardContent className="space-y-3 pb-4">
         <Progress value={progressValue} className="h-1.5" />
         <div className="max-h-[480px] overflow-y-auto space-y-0.5">
-          {steps.map((step, index) => {
-            const locked = isStepLocked(index)
+          {steps.map((step) => {
             const isActive = step.id === currentStepId
             const isPassive = step.type === "passive"
             const isTerminal = step.type === "terminal"
             const isClickable =
-              !locked && !isPassive && !(isTerminal && !step.completed)
+              !isPassive && !(isTerminal && !step.completed)
 
             const isComplianceInProgress =
-              isPassive && !step.completed && !locked
+              isPassive && !step.completed
 
             const handleClick = () => {
               if (!isClickable) return
@@ -201,13 +193,11 @@ export function SetupGuideWidget() {
                 className={`flex items-center gap-3 rounded-md px-2 py-2 text-sm ${
                   isActive || isComplianceInProgress
                     ? "bg-accent font-medium"
-                    : locked
-                      ? "text-muted-foreground"
-                      : ""
+                    : ""
                 } ${
                   isClickable
                     ? "cursor-pointer hover:bg-accent/50"
-                    : locked || (isTerminal && !step.completed)
+                    : isComplianceInProgress || (isTerminal && !step.completed)
                       ? "cursor-not-allowed"
                       : ""
                 }`}
@@ -219,8 +209,6 @@ export function SetupGuideWidget() {
                     </div>
                   ) : isComplianceInProgress ? (
                     <Clock className="size-4 text-amber-500" />
-                  ) : locked ? (
-                    <Lock className="size-3.5 text-muted-foreground" />
                   ) : (
                     <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
                   )}
