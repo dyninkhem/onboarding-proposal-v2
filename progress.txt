@@ -116,3 +116,18 @@ Thread: https://ampcode.com/threads/T-019c39e2-66eb-72a2-9e31-f1151293c650
   - The collapsed mini-card CardContent uses p-3 for internal padding (US-002 notes to keep this)
   - Maximize2 import confirmed available in lucide-react ^0.468.0
 ---
+
+## 2026-02-07 - US-002 (setup-guide-polish)
+Thread: https://ampcode.com/threads/T-019c39f0-fa1e-7025-98ea-69ec8aebf005
+- Tightened padding throughout the expanded widget for higher information density
+- CardHeader: pb-2 → pb-1.5
+- CardContent: space-y-3 → space-y-2, pb-4 → pb-3
+- AccordionTrigger: px-4 py-2.5 → px-3 py-1.5, gap-3 → gap-2
+- AccordionContent: pt-2 pb-3 px-4 → pt-1.5 pb-2 px-3
+- AccordionContent inner divs: pl-8 → pl-7
+- Collapsed mini-card already had p-3 from US-001 — no change needed
+- Files changed: components/setup-guide-widget.tsx
+- **Learnings for future iterations:**
+  - All changes were className-only — purely string replacements, no structural JSX changes
+  - pl-7 aligns description text with step titles under the tighter gap-2 icon column
+---

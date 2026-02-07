@@ -43,7 +43,7 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": "Pure className value changes — no structural modifications. Every change is a string replacement in existing className attributes. The pl-7 indent on AccordionContent inner divs aligns the description text with the step title (past the narrower icon+gap column). Apply p-3 to the collapsed mini-card's CardContent as well for consistent density."
     },
     {
