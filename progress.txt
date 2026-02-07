@@ -85,3 +85,19 @@ Thread: https://ampcode.com/threads/T-019c398e-9a76-777c-a2b0-34521efa6ece
   - Hydration guard (`hydrated` state + `useEffect`) is needed for any localStorage-driven initial state to avoid SSR mismatch
   - The pill uses `bg-primary` and `text-primary-foreground` to match the app's theme
 ---
+
+## 2026-02-07 - US-006
+Thread: https://ampcode.com/threads/T-019c398f-983a-76e3-a5f1-86eb3413efe4
+- Added step click navigation to `components/setup-guide-widget.tsx`
+- Unlocked action steps (completed or current) are clickable and navigate via `navigateToOnboarding(step.id)`
+- Locked steps show `cursor-not-allowed` and clicks are no-ops
+- Passive steps (compliance-review) are never clickable
+- Terminal steps (go-live) are not clickable until completed (auto-completed when compliance review approved)
+- Clicking a step also collapses the widget to pill state via `setExpanded(false)`
+- Added keyboard accessibility (role="button", tabIndex, Enter/Space handlers)
+- Files changed: `components/setup-guide-widget.tsx`
+- **Learnings for future iterations:**
+  - `step.type` field is the key discriminator for click behavior — passive never clickable, terminal only when completed
+  - `navigateToOnboarding` from context handles the URL construction (`/dashboard/onboarding?step={stepId}`)
+  - Collapsing on click is a UX pattern: navigate + minimize widget to avoid blocking the form
+---
