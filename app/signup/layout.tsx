@@ -35,7 +35,7 @@ export default function SignupLayout({
               unoptimized
             />
           </a>
-          <div className="flex w-full max-w-[400px] flex-col gap-8">
+          <div className="flex w-full max-w-[540px] flex-col gap-8">
             {children}
           </div>
         </div>

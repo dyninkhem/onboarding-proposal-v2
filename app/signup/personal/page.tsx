@@ -89,7 +89,7 @@ export default function SignupPersonalPage() {
 
   return (
     <>
-      <Card className="mx-auto w-full max-w-md">
+      <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
             Tell us about yourself
@@ -206,14 +206,14 @@ export default function SignupPersonalPage() {
           <div className="flex gap-3 pt-4">
             <Button
               variant="outline"
-              className="w-full"
+              className="flex-1"
               onClick={handleBack}
               disabled={loading}
             >
               Back
             </Button>
             <Button
-              className="w-full"
+              className="flex-1"
               onClick={handleNext}
               disabled={!formValid}
               loading={loading}

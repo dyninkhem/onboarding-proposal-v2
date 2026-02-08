@@ -48,35 +48,33 @@ export default function SignupTermsPage() {
 
   return (
     <>
-      <div className="mx-auto w-full max-w-4xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            Please review and accept our terms and conditions
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            Note that these terms do not replace those that may be included in
-            separately negotiated agreements.
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">
+            Terms & Conditions
+          </CardTitle>
+          <p className="text-muted-foreground text-sm">
+            Please review and accept our terms and conditions. Note that these
+            terms do not replace those that may be included in separately
+            negotiated agreements.
           </p>
-        </div>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
-            <CardTitle className="text-lg font-semibold">
-              Terms and Conditions
-            </CardTitle>
-            <Button variant="ghost" size="icon" asChild>
-              <a
-                href="/terms-and-conditions.pdf"
-                download
-                aria-label="Download Terms and Conditions"
-              >
-                <Download className="h-4 w-4" />
-              </a>
-            </Button>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="bg-background h-[500px] overflow-y-auto border-b p-8">
-              <div className="mx-auto max-w-3xl space-y-8">
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="rounded-md border">
+            <div className="flex items-center justify-between border-b px-4 py-3">
+              <span className="text-sm font-medium">Terms and Conditions</span>
+              <Button variant="ghost" size="icon" asChild>
+                <a
+                  href="/terms-and-conditions.pdf"
+                  download
+                  aria-label="Download Terms and Conditions"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
+              </Button>
+            </div>
+            <div className="h-[360px] overflow-y-auto p-6">
+              <div className="space-y-8">
                 <div className="flex justify-center">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600" />
@@ -160,53 +158,53 @@ export default function SignupTermsPage() {
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="bg-muted/30 space-y-4 p-6">
-              <h3 className="font-semibold">
-                Agree to our Terms & Conditions
-              </h3>
-              {submitError && (
-                <InlineError
-                  error={submitError === "generic" ? "generic" : "unknown"}
-                />
-              )}
-              <label className="flex items-start gap-3 cursor-pointer">
-                <Checkbox
-                  checked={localTermsAccepted}
-                  onCheckedChange={(checked) =>
-                    setLocalTermsAccepted(checked === true)
-                  }
-                  id="terms"
-                  className="mt-0.5"
-                />
-                <span className="text-muted-foreground text-sm">
-                  I have read and agree to the Paxos General Terms and
-                  Conditions. <span className="text-destructive">*</span>
-                </span>
-              </label>
-            </div>
-          </CardContent>
-        </Card>
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">
+              Agree to our Terms & Conditions
+            </h3>
+            {submitError && (
+              <InlineError
+                error={submitError === "generic" ? "generic" : "unknown"}
+              />
+            )}
+            <label className="flex cursor-pointer items-start gap-3">
+              <Checkbox
+                checked={localTermsAccepted}
+                onCheckedChange={(checked) =>
+                  setLocalTermsAccepted(checked === true)
+                }
+                id="terms"
+                className="mt-0.5"
+              />
+              <span className="text-muted-foreground text-sm">
+                I have read and agree to the Paxos General Terms and
+                Conditions. <span className="text-destructive">*</span>
+              </span>
+            </label>
+          </div>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={loading}
-            className="flex-1"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleFinish}
-            disabled={!formValid}
-            loading={loading}
-            className="flex-1"
-          >
-            Finish
-          </Button>
-        </div>
-      </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={loading}
+              className="flex-1"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleFinish}
+              disabled={!formValid}
+              loading={loading}
+              className="flex-1"
+            >
+              Finish
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }
