@@ -22,6 +22,7 @@ type SignupFlowState = {
   middleName: string;
   lastName: string;
   businessFunction: string;
+  termsAccepted: boolean;
   passkeyDone: boolean;
 };
 
@@ -39,6 +40,7 @@ const initialState: SignupFlowState = {
   middleName: "",
   lastName: "",
   businessFunction: "",
+  termsAccepted: false,
   passkeyDone: false,
 };
 

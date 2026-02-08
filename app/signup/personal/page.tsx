@@ -72,7 +72,7 @@ export default function SignupPersonalPage() {
       updateField("middleName", localMiddleName.trim());
       updateField("lastName", localLastName.trim());
       updateField("businessFunction", localBusinessFunction);
-      router.push("/signup/success");
+      router.push("/signup/terms");
     } finally {
       setLoading(false);
       submittingRef.current = false;
