@@ -16,6 +16,8 @@ type SignupFlowState = {
   dbaNames: string[];
   country: string;
   useCase: string;
+  incorporationIdType: string;
+  incorporationId: string;
   passkeyDone: boolean;
 };
 
@@ -27,6 +29,8 @@ const initialState: SignupFlowState = {
   dbaNames: [],
   country: "",
   useCase: "",
+  incorporationIdType: "",
+  incorporationId: "",
   passkeyDone: false,
 };
 
