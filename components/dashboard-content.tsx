@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { CalendarIcon, ArrowLeftRight, Search, Coins, Banknote, ArrowDown, ArrowUp, Zap, Clock } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -496,7 +496,11 @@ export function DashboardContent() {
   const [convertOpen, setConvertOpen] = useState(false)
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [automateOpen, setAutomateOpen] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+
+  useEffect(() => {
+    setSelectedDate(new Date())
+  }, [])
   const { gateAction, isOnboardingComplete } = useOnboarding()
 
   return (

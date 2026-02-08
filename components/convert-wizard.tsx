@@ -929,7 +929,7 @@ export function ConvertWizard({ type, onBack, onClose }: ConvertWizardProps) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Completed</span>
-              <span className="text-sm font-medium">{new Date().toLocaleString()}</span>
+              <span className="text-sm font-medium" suppressHydrationWarning>{new Date().toLocaleString()}</span>
             </div>
           </div>
         </CardContent>
