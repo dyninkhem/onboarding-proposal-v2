@@ -27,30 +27,37 @@ import {
   getCountryFlagEmoji,
   UNSUPPORTED_COUNTRY_VALUE,
   USE_CASES,
+  INCORPORATION_ID_TYPES,
 } from "@/lib/signup-data";
 
 export default function SignupBusinessPage() {
   const router = useRouter();
   const {
     email,
-    fullName,
     businessName,
     dbaNames,
     country,
     useCase,
+    incorporationIdType,
+    incorporationId,
     updateField,
   } = useSignupFlow();
-  const [localFullName, setLocalFullName] = useState(fullName);
   const [localBusinessName, setLocalBusinessName] = useState(businessName);
   const [localDbaNames, setLocalDbaNames] = useState(
     dbaNames.length > 0 ? dbaNames.join(", ") : ""
   );
   const [localCountry, setLocalCountry] = useState(country);
   const [localUseCase, setLocalUseCase] = useState(useCase);
-  const [fullNameBlurred, setFullNameBlurred] = useState(false);
+  const [localIncorporationIdType, setLocalIncorporationIdType] =
+    useState(incorporationIdType);
+  const [localIncorporationId, setLocalIncorporationId] =
+    useState(incorporationId);
   const [businessNameBlurred, setBusinessNameBlurred] = useState(false);
   const [countryBlurred, setCountryBlurred] = useState(false);
   const [useCaseBlurred, setUseCaseBlurred] = useState(false);
+  const [incorporationIdTypeBlurred, setIncorporationIdTypeBlurred] =
+    useState(false);
+  const [incorporationIdBlurred, setIncorporationIdBlurred] = useState(false);
   const [submitError, setSubmitError] = useState<"country_unsupported" | null>(
     null
   );
@@ -59,22 +66,31 @@ export default function SignupBusinessPage() {
   const submittingRef = useRef(false);
   useEffect(() => setMounted(true), []);
 
-  const fullNameValid = localFullName.trim().length >= 2;
   const businessNameValid = localBusinessName.trim().length >= 2;
   const countryValid = !!localCountry;
   const useCaseValid = !!localUseCase;
-  const fullNameError =
-    fullNameBlurred && !fullNameValid && localFullName.trim().length > 0;
+  const incorporationIdTypeValid = !!localIncorporationIdType;
+  const incorporationIdValid = localIncorporationId.trim().length >= 3;
   const businessNameError =
     businessNameBlurred &&
     !businessNameValid &&
     localBusinessName.trim().length > 0;
   const countryError = countryBlurred && !countryValid;
   const useCaseError = useCaseBlurred && !useCaseValid;
+  const incorporationIdTypeError =
+    incorporationIdTypeBlurred && !incorporationIdTypeValid;
+  const incorporationIdError =
+    incorporationIdBlurred &&
+    !incorporationIdValid &&
+    localIncorporationId.trim().length > 0;
   const formValid =
-    fullNameValid && businessNameValid && countryValid && useCaseValid;
+    businessNameValid &&
+    countryValid &&
+    useCaseValid &&
+    incorporationIdTypeValid &&
+    incorporationIdValid;
 
-  const handleFinish = async () => {
+  const handleNext = async () => {
     if (submittingRef.current || !formValid) return;
     submittingRef.current = true;
     setSubmitError(null);
@@ -85,7 +101,6 @@ export default function SignupBusinessPage() {
         setSubmitError("country_unsupported");
         return;
       }
-      updateField("fullName", localFullName.trim());
       updateField("businessName", localBusinessName.trim());
       updateField(
         "dbaNames",
@@ -93,7 +108,9 @@ export default function SignupBusinessPage() {
       );
       updateField("country", localCountry);
       updateField("useCase", localUseCase);
-      router.push("/signup/success");
+      updateField("incorporationIdType", localIncorporationIdType);
+      updateField("incorporationId", localIncorporationId.trim());
+      router.push("/signup/personal");
     } finally {
       setLoading(false);
       submittingRef.current = false;
@@ -139,27 +156,6 @@ export default function SignupBusinessPage() {
           />
         )}
         <FieldGroup>
-          <Field>
-            <FieldLabel className="inline-flex items-center gap-1.5">
-              Full name
-              {mounted && (
-                <InfoTooltip content="Enter your name exactly as it appears on official documents. This will be associated with your Paxos account." />
-              )}
-            </FieldLabel>
-            <Input
-              type="text"
-              placeholder="Jane Smith"
-              value={localFullName}
-              onChange={(e) => setLocalFullName(e.target.value)}
-              onBlur={() => setFullNameBlurred(true)}
-              aria-invalid={fullNameError ? true : undefined}
-            />
-            {fullNameError && (
-              <FieldDescription className="text-destructive">
-                Name must be at least 2 characters
-              </FieldDescription>
-            )}
-          </Field>
           <Field>
             <FieldLabel className="inline-flex items-center gap-1.5">
               Business legal name
@@ -285,15 +281,76 @@ export default function SignupBusinessPage() {
               </FieldDescription>
             )}
           </Field>
+          <Field>
+            <FieldLabel className="inline-flex items-center gap-1.5">
+              Incorporation ID type
+              {mounted && (
+                <InfoTooltip content="Select the type of business identification number you will provide. This helps us verify your business." />
+              )}
+            </FieldLabel>
+            <Select
+              value={localIncorporationIdType || undefined}
+              onValueChange={(v) => {
+                setLocalIncorporationIdType(v ?? "");
+                setIncorporationIdTypeBlurred(true);
+              }}
+            >
+              <SelectTrigger
+                className="w-full"
+                aria-invalid={incorporationIdTypeError ? true : undefined}
+              >
+                {localIncorporationIdType ? (
+                  INCORPORATION_ID_TYPES.find(
+                    (t) => t.value === localIncorporationIdType
+                  )?.label ?? localIncorporationIdType
+                ) : (
+                  <SelectValue placeholder="Select ID type" />
+                )}
+              </SelectTrigger>
+              <SelectContent>
+                {INCORPORATION_ID_TYPES.map((type) => (
+                  <SelectItem key={type.value} value={type.value}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {incorporationIdTypeError && (
+              <FieldDescription className="text-destructive">
+                Please select an ID type
+              </FieldDescription>
+            )}
+          </Field>
+          <Field>
+            <FieldLabel className="inline-flex items-center gap-1.5">
+              Incorporation ID
+              {mounted && (
+                <InfoTooltip content="Enter your business identification number exactly as it appears on official documents." />
+              )}
+            </FieldLabel>
+            <Input
+              type="text"
+              placeholder="e.g. 12-3456789"
+              value={localIncorporationId}
+              onChange={(e) => setLocalIncorporationId(e.target.value)}
+              onBlur={() => setIncorporationIdBlurred(true)}
+              aria-invalid={incorporationIdError ? true : undefined}
+            />
+            {incorporationIdError && (
+              <FieldDescription className="text-destructive">
+                ID must be at least 3 characters
+              </FieldDescription>
+            )}
+          </Field>
         </FieldGroup>
         <div className="pt-4">
           <Button
             className="w-full"
-            onClick={handleFinish}
+            onClick={handleNext}
             disabled={!formValid}
             loading={loading}
           >
-            Finish
+            Next
           </Button>
         </div>
       </CardContent>
