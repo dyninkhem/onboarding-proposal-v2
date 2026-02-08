@@ -53,3 +53,11 @@ export const INCORPORATION_ID_TYPES = [
   { value: "company_number", label: "Company Number" },
   { value: "other", label: "Other" },
 ] as const;
+
+export const BUSINESS_FUNCTIONS = [
+  { value: "operations", label: "Operations" },
+  { value: "legal", label: "Legal" },
+  { value: "finance", label: "Finance" },
+  { value: "developer", label: "Developer" },
+  { value: "admin", label: "Admin" },
+] as const;

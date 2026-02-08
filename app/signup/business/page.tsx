@@ -110,7 +110,7 @@ export default function SignupBusinessPage() {
       updateField("useCase", localUseCase);
       updateField("incorporationIdType", localIncorporationIdType);
       updateField("incorporationId", localIncorporationId.trim());
-      router.push("/signup/success");
+      router.push("/signup/personal");
     } finally {
       setLoading(false);
       submittingRef.current = false;

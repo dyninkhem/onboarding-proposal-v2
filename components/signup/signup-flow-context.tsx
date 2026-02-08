@@ -18,6 +18,10 @@ type SignupFlowState = {
   useCase: string;
   incorporationIdType: string;
   incorporationId: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  businessFunction: string;
   passkeyDone: boolean;
 };
 
@@ -31,6 +35,10 @@ const initialState: SignupFlowState = {
   useCase: "",
   incorporationIdType: "",
   incorporationId: "",
+  firstName: "",
+  middleName: "",
+  lastName: "",
+  businessFunction: "",
   passkeyDone: false,
 };
 
