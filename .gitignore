@@ -1,8 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# macOS
-.DS_Store
-
 # dependencies
 /node_modules
 
@@ -29,7 +24,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# ralph / dev tooling
+# lockfiles (pnpm only)
+bun.lock
+package-lock.json
+
+# macOS
+.DS_Store
+
+# dev tooling
 scripts/
 tasks/
 archive/
