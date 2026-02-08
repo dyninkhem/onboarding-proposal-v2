@@ -89,7 +89,7 @@ export default function SignupPersonalPage() {
 
   return (
     <>
-      <Card className="mx-auto w-full max-w-md">
+      <Card>
         <CardHeader>
           <CardTitle className="text-2xl font-semibold">
             Tell us about yourself
