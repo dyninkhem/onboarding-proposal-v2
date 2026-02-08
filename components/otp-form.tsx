@@ -98,7 +98,7 @@ export function OTPForm({
                   aria-invalid={codeError ? true : undefined}
                   containerClassName="w-full"
                 >
-                  <InputOTPGroup className="w-full gap-2.5 *:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:min-w-0 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border">
+                  <InputOTPGroup className="w-full gap-2.5 *:data-[slot=input-otp-slot]:h-14 *:data-[slot=input-otp-slot]:min-w-0 *:data-[slot=input-otp-slot]:flex-1 *:data-[slot=input-otp-slot]:rounded-md *:data-[slot=input-otp-slot]:border *:data-[slot=input-otp-slot]:text-lg *:data-[slot=input-otp-slot]:font-bold">
                     {Array.from({ length: Math.floor(length / 2) }, (_, i) => (
                       <InputOTPSlot key={i} index={i} />
                     ))}
