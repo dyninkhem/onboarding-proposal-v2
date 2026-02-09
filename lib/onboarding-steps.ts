@@ -2,7 +2,8 @@ export interface OnboardingStepConfig {
   id: string
   title: string
   description: string
-  type: "action" | "passive" | "terminal"
+  type: "action" | "passive" | "terminal" | "completed"
+  section?: "onboarding" | "activation"
 }
 
 export interface OnboardingProgress {
@@ -11,57 +12,66 @@ export interface OnboardingProgress {
 
 export const STEPS: OnboardingStepConfig[] = [
   {
-    id: "business-details",
-    title: "Business Details",
-    description: "Enter your legal business name, entity type, and registration number.",
-    type: "action",
+    id: "verify-account",
+    title: "Verify Account",
+    description: "Account verification is complete.",
+    type: "completed",
+    section: "onboarding",
   },
   {
-    id: "business-information",
-    title: "Business Information",
-    description: "Describe your industry, expected transaction volume, and business model.",
+    id: "business-profile",
+    title: "Business Profile",
+    description: "Enter your company identity, business information, and address.",
     type: "action",
-  },
-  {
-    id: "address",
-    title: "Address",
-    description: "Provide your registered business address for verification.",
-    type: "action",
+    section: "onboarding",
   },
   {
     id: "compliance-transaction",
     title: "Compliance & Transaction",
     description: "Share your expected payment flows, currencies, and compliance requirements.",
     type: "action",
+    section: "onboarding",
   },
   {
-    id: "business-members",
-    title: "Business Members",
-    description: "Add beneficial owners, directors, and authorized signatories.",
+    id: "people-documents",
+    title: "People & Documents",
+    description: "Add business members and upload their associated documents.",
     type: "action",
-  },
-  {
-    id: "documents",
-    title: "Documents",
-    description: "Upload identity documents, proof of address, and incorporation papers.",
-    type: "action",
+    section: "onboarding",
   },
   {
     id: "pricing-fees",
     title: "Pricing & Fees",
     description: "Review your pricing plan and confirm the fee structure for your account.",
     type: "action",
+    section: "onboarding",
   },
   {
-    id: "compliance-review",
-    title: "Compliance Review",
-    description: "Our compliance team will review your application — this typically takes 2–3 business days.",
+    id: "invite-team",
+    title: "Invite Your Team",
+    description: "Invite team members by email and assign roles.",
+    type: "action",
+    section: "activation",
+  },
+  {
+    id: "add-accounts",
+    title: "Add Accounts",
+    description: "Connect your fiat bank accounts and crypto wallet addresses.",
+    type: "action",
+    section: "activation",
+  },
+  {
+    id: "approval-policies",
+    title: "Approval Policies",
+    description: "Configure approval workflows, transaction limits, and approver roles.",
+    type: "action",
+    section: "activation",
+  },
+  {
+    id: "review-go-live",
+    title: "Review & Go Live",
+    description: "Compliance review status and go-live activation.",
     type: "passive",
-  },
-  {
-    id: "go-live",
-    title: "Go Live",
-    description: "Once approved, your account will be activated for live operations.",
-    type: "terminal",
+    section: "activation",
   },
 ]

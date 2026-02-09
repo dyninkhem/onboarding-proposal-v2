@@ -168,27 +168,80 @@ export function SetupGuideWidget() {
       <CardContent className="space-y-1 px-3 pb-1">
         <Progress value={progressValue} className="h-1" />
         <div className="max-h-[480px] overflow-y-auto">
+          {/* Onboarding section */}
+          <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Onboarding
+          </p>
           <Accordion
             type="single"
             collapsible
             value={expandedStep}
             onValueChange={setExpandedStep}
           >
-            {steps.map((step) => {
-              const isPassive = step.type === "passive"
-              const isTerminal = step.type === "terminal"
-              const isComplianceInProgress = isPassive && !step.completed
+            {steps.filter((s) => s.section === "onboarding").map((step) => {
+              const isCompleted = step.type === "completed"
 
               return (
-                <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
+                <AccordionItem key={step.id} value={step.id} className="border-b-0 border-l-2 border-transparent data-[state=open]:bg-muted/50 data-[state=open]:border-primary">
                   <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
                     <div className="flex items-center gap-2">
-                      <div className="flex size-5 shrink-0 items-center justify-center">
+                      <div className="flex size-4 shrink-0 items-center justify-center">
                         {step.completed ? (
-                          <div className="flex size-5 items-center justify-center rounded-full bg-primary">
-                            <Check className="size-3 text-primary-foreground" />
+                          <div className="flex size-4 items-center justify-center rounded-full bg-primary">
+                            <Check className="size-2.5 text-primary-foreground" />
                           </div>
-                        ) : isComplianceInProgress ? (
+                        ) : (
+                          <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
+                        )}
+                      </div>
+                      <span className={`text-sm ${isCompleted ? "text-muted-foreground" : ""}`}>{step.title}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-0.5 pb-1 px-2.5">
+                    <div className="pl-6 space-y-1.5">
+                      <p className="text-sm text-muted-foreground">{step.description}</p>
+                      {!isCompleted && (
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            navigateToOnboarding(step.id)
+                            setExpanded(false)
+                          }}
+                        >
+                          {step.completed ? "Review" : "Start"}
+                        </Button>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              )
+            })}
+          </Accordion>
+
+          {/* Activation section */}
+          <p className="px-2.5 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Activation
+          </p>
+          <Accordion
+            type="single"
+            collapsible
+            value={expandedStep}
+            onValueChange={(v) => setExpandedStep(v)}
+          >
+            {steps.filter((s) => s.section === "activation").map((step) => {
+              const isReviewGoLive = step.id === "review-go-live"
+              const isReviewInProgress = isReviewGoLive && !step.completed
+
+              return (
+                <AccordionItem key={step.id} value={step.id} className="border-b-0 border-l-2 border-transparent data-[state=open]:bg-muted/50 data-[state=open]:border-primary">
+                  <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
+                    <div className="flex items-center gap-2">
+                      <div className="flex size-4 shrink-0 items-center justify-center">
+                        {step.completed ? (
+                          <div className="flex size-4 items-center justify-center rounded-full bg-primary">
+                            <Check className="size-2.5 text-primary-foreground" />
+                          </div>
+                        ) : isReviewInProgress ? (
                           <Clock className="size-4 text-amber-500" />
                         ) : (
                           <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
@@ -198,7 +251,7 @@ export function SetupGuideWidget() {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="pt-0.5 pb-1 px-2.5">
-                    {isComplianceInProgress ? (
+                    {isReviewInProgress ? (
                       <div className="pl-6 space-y-1.5">
                         <p className="text-sm text-muted-foreground">
                           Under review — approx. 2–3 business days
@@ -212,13 +265,7 @@ export function SetupGuideWidget() {
                           (Demo: Approve)
                         </Button>
                       </div>
-                    ) : isTerminal && !step.completed ? (
-                      <div className="pl-6">
-                        <p className="text-sm text-muted-foreground">
-                          Your account will go live once compliance review is approved
-                        </p>
-                      </div>
-                    ) : isTerminal && step.completed ? (
+                    ) : isReviewGoLive && step.completed ? (
                       <div className="pl-6">
                         <p className="text-sm text-primary font-medium">Operations Live</p>
                       </div>
