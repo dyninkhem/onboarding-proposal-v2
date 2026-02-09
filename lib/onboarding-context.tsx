@@ -10,7 +10,8 @@ export interface OnboardingStep {
   description: string
   completed: boolean
   hasForm?: boolean
-  type: "action" | "passive" | "terminal"
+  type: "action" | "passive" | "terminal" | "completed"
+  section?: "onboarding" | "activation"
 }
 
 function buildSteps(
@@ -21,9 +22,10 @@ function buildSteps(
     id: cfg.id,
     title: cfg.title,
     description: cfg.description,
-    completed: !!progress[cfg.id],
+    completed: cfg.type === "completed" ? true : !!progress[cfg.id],
     hasForm: cfg.type === "action",
     type: cfg.type,
+    section: cfg.section,
   }))
 }
 
@@ -71,7 +73,7 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
   })
 
   const [currentStepId, setCurrentStepId] = React.useState<string | null>(
-    initiallyComplete ? null : STEPS[0]?.id ?? null
+    initiallyComplete ? null : (STEPS.find((s) => s.type !== "completed")?.id ?? null)
   )
 
   const [isWidgetDismissed, setWidgetDismissedState] = React.useState(false)
@@ -124,13 +126,13 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
     setSteps((prev) => {
       const step = prev.find((s) => s.id === stepId)
       if (!step) return prev
-      if (step.type === "passive") return prev
+      if (step.type === "passive" || step.type === "completed") return prev
 
       const updated = prev.map((s) =>
         s.id === stepId ? { ...s, completed: true } : s
       )
       const currentIndex = prev.findIndex((s) => s.id === stepId)
-      const nextIncomplete = updated.find((s, i) => i > currentIndex && !s.completed)
+      const nextIncomplete = updated.find((s, i) => i > currentIndex && !s.completed && s.type !== "completed")
       setCurrentStepId(nextIncomplete?.id ?? null)
       return updated
     })
@@ -139,11 +141,10 @@ export function OnboardingProvider({ children, initiallyComplete = false }: Onbo
   const approveComplianceReview = React.useCallback(() => {
     setSteps((prev) => {
       const updated = prev.map((s) => {
-        if (s.id === "compliance-review") return { ...s, completed: true }
-        if (s.type === "terminal") return { ...s, completed: true }
+        if (s.id === "review-go-live") return { ...s, completed: true }
         return s
       })
-      const firstIncomplete = updated.find((s) => !s.completed)
+      const firstIncomplete = updated.find((s) => !s.completed && s.type !== "completed")
       setCurrentStepId(firstIncomplete?.id ?? null)
       return updated
     })
