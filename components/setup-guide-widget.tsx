@@ -185,10 +185,10 @@ export function SetupGuideWidget() {
                 <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
                   <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
                     <div className="flex items-center gap-2">
-                      <div className="flex size-5 shrink-0 items-center justify-center">
+                      <div className="flex size-4 shrink-0 items-center justify-center">
                         {step.completed ? (
-                          <div className="flex size-5 items-center justify-center rounded-full bg-primary">
-                            <Check className="size-3 text-primary-foreground" />
+                          <div className="flex size-4 items-center justify-center rounded-full bg-primary">
+                            <Check className="size-2.5 text-primary-foreground" />
                           </div>
                         ) : (
                           <div className="size-3.5 rounded-full border-2 border-muted-foreground/40" />
@@ -236,10 +236,10 @@ export function SetupGuideWidget() {
                 <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
                   <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
                     <div className="flex items-center gap-2">
-                      <div className="flex size-5 shrink-0 items-center justify-center">
+                      <div className="flex size-4 shrink-0 items-center justify-center">
                         {step.completed ? (
-                          <div className="flex size-5 items-center justify-center rounded-full bg-primary">
-                            <Check className="size-3 text-primary-foreground" />
+                          <div className="flex size-4 items-center justify-center rounded-full bg-primary">
+                            <Check className="size-2.5 text-primary-foreground" />
                           </div>
                         ) : isReviewInProgress ? (
                           <Clock className="size-4 text-amber-500" />
