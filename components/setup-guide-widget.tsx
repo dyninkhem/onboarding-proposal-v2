@@ -182,7 +182,7 @@ export function SetupGuideWidget() {
               const isCompleted = step.type === "completed"
 
               return (
-                <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
+                <AccordionItem key={step.id} value={step.id} className="border-b-0 border-l-2 border-transparent data-[state=open]:bg-muted/50 data-[state=open]:border-primary">
                   <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
                     <div className="flex items-center gap-2">
                       <div className="flex size-4 shrink-0 items-center justify-center">
@@ -233,7 +233,7 @@ export function SetupGuideWidget() {
               const isReviewInProgress = isReviewGoLive && !step.completed
 
               return (
-                <AccordionItem key={step.id} value={step.id} className="border-b-0 data-[state=open]:bg-muted/50 data-[state=open]:border-l-2 data-[state=open]:border-primary">
+                <AccordionItem key={step.id} value={step.id} className="border-b-0 border-l-2 border-transparent data-[state=open]:bg-muted/50 data-[state=open]:border-primary">
                   <AccordionTrigger className="hover:no-underline hover:bg-accent/30 px-2.5 py-1">
                     <div className="flex items-center gap-2">
                       <div className="flex size-4 shrink-0 items-center justify-center">
