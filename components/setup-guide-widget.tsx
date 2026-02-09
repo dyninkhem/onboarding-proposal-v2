@@ -131,7 +131,7 @@ export function SetupGuideWidget() {
         ? "inset-x-0 bottom-0 w-full rounded-b-none"
         : "right-4 bottom-4 w-80"
     }`}>
-      <CardHeader className="flex flex-row items-center justify-between px-3 pt-1.5 pb-0">
+      <CardHeader className="flex flex-row items-center justify-between px-3 pt-1 pb-0">
         <div className="space-y-0.5">
           <CardTitle className="text-sm font-semibold">Setup guide</CardTitle>
           {isOnboardingComplete ? (
@@ -165,7 +165,7 @@ export function SetupGuideWidget() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-1 px-3 pb-1">
+      <CardContent className="space-y-1 px-3 pb-0.5">
         <Progress value={progressValue} className="h-1" />
         <div className="max-h-[480px] overflow-y-auto">
           {/* Onboarding section */}
