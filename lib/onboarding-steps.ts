@@ -16,6 +16,7 @@ export const STEPS: OnboardingStepConfig[] = [
     title: "Verify Account",
     description: "Account verification is complete.",
     type: "completed",
+    section: "onboarding",
   },
   {
     id: "business-profile",
