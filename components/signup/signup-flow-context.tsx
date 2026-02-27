@@ -11,14 +11,12 @@ import {
 
 type SignupFlowState = {
   email: string;
-  password: string;
-  companyName: string;
+  code: string;
 };
 
 const initialState: SignupFlowState = {
   email: "",
-  password: "",
-  companyName: "",
+  code: "",
 };
 
 const STORAGE_KEY = "signup-flow-state";
@@ -37,8 +35,7 @@ function loadState(): SignupFlowState {
 function saveState(state: SignupFlowState): void {
   if (typeof window === "undefined") return;
   try {
-    const { password, ...safe } = state;
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     // sessionStorage may be full or disabled
   }

@@ -44,7 +44,10 @@ export function IntroModal() {
   const [form, setForm] = useState<IntroFormState>(initialFormState);
 
   useEffect(() => {
-    if (!getIntroComplete()) {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("intro") === "1" || !getIntroComplete()) {
+      setStep(1);
+      setForm(initialFormState);
       setOpen(true);
     }
     const handler = () => {
@@ -91,7 +94,7 @@ export function IntroModal() {
       if (!isOpen) handleSkip();
     }}>
       <DialogPortal>
-        <DialogOverlay />
+        <DialogOverlay className="bg-black/60" />
         <DialogPrimitive.Content
           className="fixed top-[50%] left-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-4xl rounded-xl border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 overflow-hidden"
         >

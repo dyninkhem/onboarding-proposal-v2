@@ -93,6 +93,7 @@ export function StepBusiness({
                 placeholder="First name"
                 value={form.firstName}
                 onChange={(e) => updateForm("firstName", e.target.value)}
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
@@ -102,6 +103,7 @@ export function StepBusiness({
                 placeholder="Last name"
                 value={form.lastName}
                 onChange={(e) => updateForm("lastName", e.target.value)}
+                className="bg-white"
               />
             </div>
           </div>
@@ -112,7 +114,7 @@ export function StepBusiness({
               value={form.businessFunction}
               onValueChange={(v) => updateForm("businessFunction", v)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Select your role" />
               </SelectTrigger>
               <SelectContent>
@@ -131,7 +133,7 @@ export function StepBusiness({
               value={form.countryOfIncorporation}
               onValueChange={(v) => updateForm("countryOfIncorporation", v)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full bg-white">
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
               <SelectContent>
@@ -151,7 +153,7 @@ export function StepBusiness({
                 value={form.incorporationIdType}
                 onValueChange={(v) => updateForm("incorporationIdType", v)}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full bg-white">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -170,6 +172,7 @@ export function StepBusiness({
                 placeholder="Enter ID"
                 value={form.incorporationId}
                 onChange={(e) => updateForm("incorporationId", e.target.value)}
+                className="bg-white"
               />
             </div>
           </div>
