@@ -47,6 +47,13 @@ export function IntroModal() {
     if (!getIntroComplete()) {
       setOpen(true);
     }
+    const handler = () => {
+      setStep(1);
+      setForm(initialFormState);
+      setOpen(true);
+    };
+    window.addEventListener("open-intro-modal", handler);
+    return () => window.removeEventListener("open-intro-modal", handler);
   }, []);
 
   const updateForm = useCallback(
@@ -86,6 +93,7 @@ export function IntroModal() {
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
+          aria-label="Introduction setup"
           className="fixed top-[50%] left-[50%] z-50 translate-x-[-50%] translate-y-[-50%] w-full max-w-4xl rounded-xl border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 overflow-hidden"
         >
           <div className="grid grid-cols-1 md:grid-cols-[1fr_0.8fr] min-h-[560px]">

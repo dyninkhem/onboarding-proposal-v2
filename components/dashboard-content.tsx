@@ -507,8 +507,9 @@ export function DashboardContent() {
   const [showIntroPrompt, setShowIntroPrompt] = useState(false)
 
   useEffect(() => {
-    const complete = getIntroComplete()
-    if (!complete) {
+    if (typeof window === "undefined") return
+    const value = localStorage.getItem("intro-complete")
+    if (value === "false") {
       setShowIntroPrompt(true)
     }
   }, [])
@@ -579,7 +580,8 @@ export function DashboardContent() {
               variant="outline"
               onClick={() => {
                 clearIntroData()
-                window.location.reload()
+                setShowIntroPrompt(false)
+                window.dispatchEvent(new Event("open-intro-modal"))
               }}
             >
               Get started

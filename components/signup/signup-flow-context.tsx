@@ -37,7 +37,8 @@ function loadState(): SignupFlowState {
 function saveState(state: SignupFlowState): void {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const { password, ...safe } = state;
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
   } catch {
     // sessionStorage may be full or disabled
   }
