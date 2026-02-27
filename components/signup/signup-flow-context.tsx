@@ -22,7 +22,6 @@ const initialState: SignupFlowState = {
 const STORAGE_KEY = "signup-flow-state";
 
 function loadState(): SignupFlowState {
-  if (typeof window === "undefined") return initialState;
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return initialState;
@@ -33,7 +32,6 @@ function loadState(): SignupFlowState {
 }
 
 function saveState(state: SignupFlowState): void {
-  if (typeof window === "undefined") return;
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
@@ -47,6 +45,7 @@ type SignupFlowContextValue = SignupFlowState & {
     value: SignupFlowState[K]
   ) => void;
   clearState: () => void;
+  isHydrated: boolean;
 };
 
 const SignupFlowContext = createContext<SignupFlowContextValue | null>(null);
@@ -56,7 +55,15 @@ export function SignupFlowProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<SignupFlowState>(loadState);
+  // Always initialize with the same state on server and client to avoid hydration mismatch
+  const [state, setState] = useState<SignupFlowState>(initialState);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Hydrate from sessionStorage after mount
+  useEffect(() => {
+    setState(loadState());
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     saveState(state);
@@ -81,8 +88,8 @@ export function SignupFlowProvider({
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, updateField, clearState }),
-    [state, updateField, clearState]
+    () => ({ ...state, updateField, clearState, isHydrated }),
+    [state, updateField, clearState, isHydrated]
   );
 
   return (

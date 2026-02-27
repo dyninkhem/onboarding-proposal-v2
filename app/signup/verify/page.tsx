@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { OTPForm } from "@/components/otp-form";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSignupFlow } from "@/components/signup/signup-flow-context";
 
 const RESEND_COOLDOWN_SEC = 60;
@@ -16,6 +18,7 @@ export default function SignupVerifyPage() {
   const [codeBlurred, setCodeBlurred] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const submittingRef = useRef(false);
 
   const codeValid = /^\d{6}$/.test(localCode.trim());
@@ -36,21 +39,42 @@ export default function SignupVerifyPage() {
   };
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && !email) router.replace("/signup/email");
+  }, [mounted, email, router]);
+
+  useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown((c) => c - 1), 1000);
     return () => clearInterval(t);
   }, [resendCooldown]);
-
-  useEffect(() => {
-    if (!email) router.replace("/signup/email");
-  }, [email, router]);
 
   const handleResend = () => {
     if (resendCooldown > 0) return;
     setResendCooldown(RESEND_COOLDOWN_SEC);
   };
 
-  if (!email) return null;
+  if (!mounted || !email) {
+    return (
+      <Card className="w-full overflow-visible">
+        <CardHeader className="gap-2">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <div className="flex gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 flex-1" />
+            ))}
+          </div>
+          <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <OTPForm
