@@ -18,6 +18,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { OnboardingCard } from "@/components/onboarding-card"
 import { GatedActionButton } from "@/components/gated-action-button"
 import { useOnboarding } from "@/lib/onboarding-context"
+import { getIntroComplete, clearIntroData } from "@/lib/intro-data"
 
 // Asset Icons
 function USDIcon({ className }: { className?: string }) {
@@ -503,6 +504,16 @@ export function DashboardContent() {
   }, [])
   const { gateAction, isOnboardingComplete } = useOnboarding()
 
+  const [showIntroPrompt, setShowIntroPrompt] = useState(false)
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const value = localStorage.getItem("intro-complete")
+    if (value === "false") {
+      setShowIntroPrompt(true)
+    }
+  }, [])
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       {/* Page Header */}
@@ -554,6 +565,30 @@ export function DashboardContent() {
 
       {/* Onboarding Card */}
       <OnboardingCard />
+
+      {showIntroPrompt && (
+        <Card className="border-primary/20 bg-primary/5 py-3">
+          <CardContent className="flex items-center justify-between px-4">
+            <div>
+              <p className="text-sm font-medium">Customize your setup</p>
+              <p className="text-muted-foreground text-xs">
+                Tell us about your business to get personalized recommendations.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                clearIntroData()
+                setShowIntroPrompt(false)
+                window.dispatchEvent(new Event("open-intro-modal"))
+              }}
+            >
+              Get started
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary/Balance Card - Zero State */}
       <Card className="py-4">

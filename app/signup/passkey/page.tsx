@@ -19,7 +19,7 @@ export default function SignupPasskeyPage() {
   const submittingRef = useRef(false);
 
   const handlePasskeySuccess = () => {
-    router.push("/signup/business");
+    router.push("/signup/success");
   };
 
   const handlePasskeyFailure = () => {

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { UserPlus, LogIn, LayoutDashboard } from "lucide-react"
+import { UserPlus, LogIn, LayoutDashboard, Sparkles } from "lucide-react"
 
 export default function ConsolePage() {
   return (
@@ -53,6 +53,20 @@ export default function ConsolePage() {
             <span className="font-medium text-sm">Dashboard</span>
             <span className="text-muted-foreground text-xs">
               Go directly to the dashboard
+            </span>
+          </div>
+        </Link>
+        <Link
+          href="/dashboard?intro=1"
+          className="group flex items-center gap-4 rounded-lg border bg-card p-4 transition-colors hover:bg-accent"
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <Sparkles className="size-5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-medium text-sm">Intro Modal</span>
+            <span className="text-muted-foreground text-xs">
+              Open the intro setup modal on dashboard
             </span>
           </div>
         </Link>
