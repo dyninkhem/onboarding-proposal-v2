@@ -1,24 +1,28 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { OTPForm } from "@/components/otp-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSignupFlow } from "@/components/signup/signup-flow-context";
+
+const OTPForm = dynamic(
+  () => import("@/components/otp-form").then((mod) => mod.OTPForm),
+  { ssr: false }
+);
 
 const RESEND_COOLDOWN_SEC = 60;
 
 export default function SignupVerifyPage() {
   const router = useRouter();
-  const { email, code, updateField } = useSignupFlow();
+  const { email, code, updateField, isHydrated } = useSignupFlow();
   const [localCode, setLocalCode] = useState(code);
   const [codeBlurred, setCodeBlurred] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [mounted, setMounted] = useState(false);
   const submittingRef = useRef(false);
 
   const codeValid = /^\d{6}$/.test(localCode.trim());
@@ -39,12 +43,8 @@ export default function SignupVerifyPage() {
   };
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted && !email) router.replace("/signup/email");
-  }, [mounted, email, router]);
+    if (isHydrated && !email) router.replace("/signup/email");
+  }, [isHydrated, email, router]);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -57,7 +57,7 @@ export default function SignupVerifyPage() {
     setResendCooldown(RESEND_COOLDOWN_SEC);
   };
 
-  if (!mounted || !email) {
+  if (!isHydrated) {
     return (
       <Card className="w-full overflow-visible">
         <CardHeader className="gap-2">
