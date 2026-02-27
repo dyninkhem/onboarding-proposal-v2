@@ -1401,3 +1401,130 @@ Verify the complete flow:
 git add -A
 git commit -m "chore: cleanup stale references from signup refactor"
 ```
+
+---
+
+## Task 12: Browser agent testing — walk all flows and find issues
+
+**Prerequisites:** Tasks 1-11 complete, `pnpm build` passes, dev server running.
+
+**Tools:** Use `agent-browser` (browser automation agent) to navigate the app as a real user would. Start the dev server with `pnpm dev` on port 3000 before running tests.
+
+**Step 1: Start the dev server**
+
+Run: `pnpm dev`
+Confirm: Server is running at `http://localhost:3000`
+
+**Step 2: Test Flow A — Signup happy path**
+
+Navigate to `http://localhost:3000/signup`. Test the following:
+
+1. **Empty form validation:** Click "Create Account" with all fields empty → button should be disabled
+2. **Email validation:** Enter `notanemail`, tab out → should show validation error. Enter `valid@example.com` → error clears
+3. **Partial form:** Fill email + password but leave company name empty → button stays disabled
+4. **Full form submit:** Fill email=`test@example.com`, password=`Test1234`, company=`Acme Corp` → click "Create Account"
+5. **Success page:** Verify animation appears (checkmark + "Account created" text + company name)
+6. **Auto-redirect:** Confirm auto-redirect to `/dashboard` within ~2 seconds (no manual click required)
+7. **Sign in link:** Go back to `/signup` → click "Sign in" link → verify it navigates to `/login`
+
+**Step 3: Test Flow B — Intro modal appears on dashboard**
+
+After redirect from signup success, or navigate directly to `http://localhost:3000/dashboard`:
+
+1. **Modal auto-opens:** Verify the intro modal appears automatically on first visit
+2. **Layout:** Confirm two-column layout — left panel with form, right panel with branded gradient/card
+3. **Close button:** Verify X button is in top-right corner and is clickable
+4. **Overlay:** Verify backdrop dimming behind modal
+5. **Escape key:** Press Escape → modal should close
+6. **Overlay click:** Re-open modal, click outside the modal card → should close
+
+**Step 4: Test Flow C — Intro modal Step 1 (Business Details)**
+
+1. **Heading:** "Welcome to Paxos" with subtext visible
+2. **Fields present:** First name, Last name, Business function (dropdown), Country of incorporation (dropdown), Incorporation ID type (dropdown), Incorporation ID (text)
+3. **Required validation:** Leave all fields empty → "Continue" button disabled
+4. **Fill partially:** Fill first name + last name only → button still disabled
+5. **Select dropdowns:** Click Business function → verify dropdown opens with options. Select "Engineering". Repeat for Country ("United States") and Incorporation ID type ("EIN (US)")
+6. **Fill completely:** Fill all 6 fields → "Continue" button becomes enabled
+7. **Skip for now:** Verify "Skip for now" link is visible and clickable → closes modal
+8. **Continue:** Click Continue → should advance to Step 2
+
+**Step 5: Test Flow D — Intro modal Step 2 (Recommendations)**
+
+1. **Back link:** Verify "← Back" link goes back to Step 1 with data preserved
+2. **Navigate forward again** to Step 2
+3. **Heading:** "Recommendations for you"
+4. **Pre-selected cards:** For US country selection, verify "Access & distribute stablecoins" and "Digital asset custody" appear as checkbox cards, both pre-checked
+5. **Uncheck:** Click a card to uncheck → checkbox deselects, card border changes
+6. **Re-check:** Click again → card re-selects
+7. **Skip for now:** Verify link is visible
+8. **Continue:** Click Continue → advance to Step 3
+
+**Step 6: Test Flow E — Intro modal Step 3 (All Offerings)**
+
+1. **Back link:** Verify "← Back" goes to Step 2
+2. **Navigate forward again** to Step 3
+3. **Heading:** "Are there other ways you want to use Paxos?"
+4. **Chip count:** For US user, verify 7 chips visible (USDL hidden). For non-US user, verify 8 chips
+5. **Pre-selected chips:** Chips selected in Step 2 should carry over as selected (filled style with checkmark)
+6. **Toggle chip:** Click an unselected chip → becomes selected (primary color + checkmark). Click again → deselects
+7. **Tooltips:** Hover over any chip → tooltip appears with full description text
+8. **Continue:** Click full-width "Continue" button → advance to Step 4
+
+**Step 7: Test Flow F — Intro modal Step 4 (Confirmation)**
+
+1. **Back link:** Verify "← Back" goes to Step 3
+2. **Heading:** "Get started with your account"
+3. **Timeline:** Verify 3 numbered steps with vertical connecting line:
+   - "1. Complete your setup"
+   - "2. Submit for review"
+   - "3. You're ready to go"
+4. **Get started button:** Full-width "Get started" button visible
+5. **Click "Get started":** Modal closes, user lands on dashboard. Verify `localStorage` has `intro-complete` = `"true"` and `intro-data` contains all submitted data
+6. **Modal stays closed:** Refresh the page → modal should NOT re-appear
+
+**Step 8: Test Flow G — Skip and re-entry**
+
+1. **Clear state:** Clear localStorage (`localStorage.clear()`) and reload `/dashboard`
+2. **Modal appears:** Verify modal opens
+3. **Skip immediately:** Click "Skip for now" on Step 1 (or close via X button)
+4. **Re-entry banner:** Verify a "Customize your setup" banner/card appears on the dashboard with a "Get started" button
+5. **Re-open modal:** Click "Get started" on the banner → modal re-opens at Step 1
+6. **Complete modal:** Walk through all 4 steps and click "Get started" on Step 4
+7. **Banner gone:** Verify re-entry banner no longer shows after completion
+
+**Step 9: Test Flow H — Non-US geography path**
+
+1. **Clear state:** Clear localStorage and reload `/dashboard`
+2. **Step 1:** Select country = "Singapore" (non-US)
+3. **Step 2:** Verify recommendations include "Access & distribute stablecoins" and "Earn yield on stablecoins (USDL)" — both pre-selected
+4. **Step 3:** Verify USDL chip IS visible (8 total chips instead of 7)
+5. **Step 4 → Complete:** Verify `intro-data` in localStorage has `entityType: "PTE"` and `hasUSDL: true` (if USDL was selected)
+
+**Step 10: Test Flow I — Edge cases and regressions**
+
+1. **Direct URL access:** Navigate directly to `http://localhost:3000/signup/success` without going through signup → should still render (may show generic text)
+2. **Dashboard without modal:** Set `localStorage.setItem("intro-complete", "true")` manually, reload `/dashboard` → modal should NOT appear, no re-entry banner
+3. **Setup guide widget:** Verify the existing setup guide widget still renders correctly in the bottom-right of the dashboard
+4. **Responsive:** Resize browser to mobile width (<768px) → verify signup form still usable, modal right panel should be hidden (md:flex)
+5. **Browser refresh mid-modal:** Open modal, fill Step 1, refresh page → modal re-opens (data may be lost — this is acceptable for prototype)
+6. **Console errors:** Check browser console for React errors, hydration mismatches, or unhandled exceptions throughout all flows
+
+**Step 11: Document issues**
+
+Create a file `docs/plans/2026-02-26-browser-test-results.md` with:
+- Each flow tested (A through I)
+- Pass/fail status for each check
+- Screenshots or descriptions of any issues found
+- Severity classification: P0 (broken flow), P1 (visual bug), P2 (minor polish)
+
+**Step 12: Fix P0 issues**
+
+Address any P0 (broken flow) issues immediately. P1/P2 issues can be tracked for follow-up.
+
+**Step 13: Commit fixes**
+
+```bash
+git add -A
+git commit -m "fix: address issues found in browser agent testing"
+```
