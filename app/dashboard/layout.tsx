@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { OnboardingProvider } from "@/lib/onboarding-context"
 import { SetupGuideWidget } from "@/components/setup-guide-widget"
+import { IntroModal } from "@/components/intro-modal/intro-modal"
 
 export default function DashboardLayout({
   children,
@@ -16,6 +17,7 @@ export default function DashboardLayout({
         <SidebarInset>{children}</SidebarInset>
       </SidebarProvider>
       <SetupGuideWidget />
+      <IntroModal />
     </OnboardingProvider>
   )
 }
